@@ -94,6 +94,13 @@ export default function Login() {
           <h2 className="form-titulo">Entrar</h2>
           <p className="sub">Acesse com o usuário e a senha cadastrados.</p>
 
+          {local.state?.aviso && !erroGeral && (
+            <div className="alerta-info" role="status">
+              <Icone nome="info" tamanho={18} cor="#1F4FD8" />
+              <div className="alerta-titulo azul">{local.state.aviso}</div>
+            </div>
+          )}
+
           {erroGeral && (
             <div className="alerta-erro" role="alert">
               <Icone nome="alert" tamanho={18} cor="#B42318" />

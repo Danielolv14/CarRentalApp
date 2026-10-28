@@ -11,8 +11,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
+import static br.pucminas.aluguelcarros.controller.DocumentosDeTeste.cnpjValido;
+import static br.pucminas.aluguelcarros.controller.DocumentosDeTeste.cpfValido;
+import static br.pucminas.aluguelcarros.controller.DocumentosDeTeste.rendimentos;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthControllerTest {
-
-    private static final AtomicInteger SEQUENCIA = new AtomicInteger(100_000_000);
 
     @Autowired private MockMvc mvc;
     @Autowired private UsuarioRepository usuarios;
@@ -215,50 +214,5 @@ class AuthControllerTest {
 
     private ResultActions postJson(String url, String corpo) throws Exception {
         return mvc.perform(post(url).contentType(MediaType.APPLICATION_JSON).content(corpo));
-    }
-
-    private static String rendimentos(int quantidade) {
-        StringBuilder json = new StringBuilder("[");
-        for (int i = 0; i < quantidade; i++) {
-            if (i > 0) {
-                json.append(',');
-            }
-            json.append("{\"entidadeEmpregadora\":\"Empresa ").append(i + 1).append("\",\"valor\":1500.50}");
-        }
-        return json.append(']').toString();
-    }
-
-    /** Gera um CPF válido diferente a cada chamada (dígitos verificadores calculados). */
-    private static String cpfValido() {
-        String base = String.valueOf(SEQUENCIA.incrementAndGet());
-        int d1 = digitoModulo11(base, 10);
-        int d2 = digitoModulo11(base + d1, 11);
-        return base + d1 + d2;
-    }
-
-    /** Gera um CNPJ válido diferente a cada chamada. */
-    private static String cnpjValido() {
-        String base = String.format("%08d", SEQUENCIA.incrementAndGet() % 100_000_000) + "0001";
-        int d1 = digitoCnpj(base, new int[]{5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2});
-        int d2 = digitoCnpj(base + d1, new int[]{6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2});
-        return base + d1 + d2;
-    }
-
-    private static int digitoModulo11(String numeros, int pesoInicial) {
-        int soma = 0;
-        for (int i = 0; i < numeros.length(); i++) {
-            soma += (numeros.charAt(i) - '0') * (pesoInicial - i);
-        }
-        int resto = soma % 11;
-        return resto < 2 ? 0 : 11 - resto;
-    }
-
-    private static int digitoCnpj(String numeros, int[] pesos) {
-        int soma = 0;
-        for (int i = 0; i < pesos.length; i++) {
-            soma += (numeros.charAt(i) - '0') * pesos[i];
-        }
-        int resto = soma % 11;
-        return resto < 2 ? 0 : 11 - resto;
     }
 }

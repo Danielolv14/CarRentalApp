@@ -1,0 +1,180 @@
+@startuml classes
+!pragma layout smetana
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #3F4450
+skinparam ClassBorderColor #15181E
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #F3F6FE
+skinparam PackageBorderColor #9A9DA6
+skinparam StereotypeCBackgroundColor #F5B700
+skinparam StereotypeABackgroundColor #E8EEFC
+skinparam StereotypeEBackgroundColor #DCFCE7
+skinparam TitleFontSize 18
+
+title Diagrama de Classes · Sistema de Aluguel de Carros (v3)
+set separator none
+
+package "br.pucminas.aluguelcarros.model" {
+
+  abstract class Usuario {
+    - id: Long
+    - login: String
+    - senha: String
+    - nome: String
+    - ativo: boolean
+    + {abstract} getPerfil(): Perfil
+    + desativar(): void
+  }
+
+  class Cliente {
+    - rg: String
+    - cpf: String
+    - profissao: String
+    + adicionarRendimento(rendimento: Rendimento): void
+    + removerRendimento(rendimento: Rendimento): void
+    + calcularRendaTotal(): BigDecimal
+    + getPerfil(): Perfil
+  }
+
+  abstract class Agente {
+    - cnpj: String
+    - razaoSocial: String
+    + avaliarPedido(pedido: Pedido, resultado: ResultadoParecer, justificativa: String): Parecer
+    + executarContrato(pedido: Pedido, numero: String, tipoProprietario: TipoProprietario): Contrato
+    + getPerfil(): Perfil
+  }
+
+  class Empresa
+
+  class Banco {
+    + concederCredito(pedido: Pedido, valor: BigDecimal, parcelas: int, taxaMensal: BigDecimal): ContratoCredito
+  }
+
+  class Endereco <<embeddable>> {
+    - cep: String
+    - logradouro: String
+    - numero: String
+    - bairro: String
+    - cidade: String
+    - uf: String
+  }
+
+  class Rendimento {
+    - id: Long
+    - entidadeEmpregadora: String
+    - valor: BigDecimal
+  }
+
+  class Automovel {
+    - id: Long
+    - matricula: String
+    - ano: int
+    - marca: String
+    - modelo: String
+    - placa: String
+    - valorDiaria: BigDecimal
+  }
+
+  class Pedido {
+    - id: Long
+    - dataCriacao: LocalDateTime
+    - dataRetirada: LocalDate
+    - dataDevolucao: LocalDate
+    - status: StatusPedido
+    - creditoSolicitado: boolean
+    - valorCreditoSolicitado: BigDecimal
+    + calcularDiarias(): long
+    + calcularValorEstimado(): BigDecimal
+    + podeSerAlterado(): boolean
+    + alterar(automovel: Automovel, retirada: LocalDate, devolucao: LocalDate): void
+    + solicitarCredito(banco: Banco, valor: BigDecimal): void
+    + iniciarAnalise(): void
+    + registrarParecer(parecer: Parecer): void
+    + cancelar(): void
+    + marcarComoContratado(): void
+  }
+
+  class Parecer {
+    - id: Long
+    - dataParecer: LocalDateTime
+    - resultado: ResultadoParecer
+    - justificativa: String
+  }
+
+  class Contrato {
+    - id: Long
+    - numero: String
+    - dataExecucao: LocalDate
+    - tipoProprietario: TipoProprietario
+  }
+
+  class ContratoCredito {
+    - id: Long
+    - valor: BigDecimal
+    - numeroParcelas: int
+    - taxaJurosMensal: BigDecimal
+    + calcularValorParcela(): BigDecimal
+  }
+
+  enum Perfil {
+    CLIENTE
+    AGENTE
+  }
+
+  enum StatusPedido {
+    ENVIADO
+    EM_ANALISE
+    APROVADO
+    REPROVADO
+    CONTRATADO
+    CANCELADO
+  }
+
+  enum ResultadoParecer {
+    POSITIVO
+    NEGATIVO
+  }
+
+  enum TipoProprietario {
+    CLIENTE
+    EMPRESA
+    BANCO
+  }
+}
+
+Usuario <|-- Cliente
+Usuario <|-- Agente
+Agente <|-- Empresa
+Agente <|-- Banco
+
+Cliente *-- "1" Endereco : endereco
+Cliente "1" *-- "0..3" Rendimento : rendimentos
+Pedido "0..*" --> "1" Cliente : cliente
+Pedido "0..*" --> "1" Automovel : automovel
+Pedido "0..*" --> "0..1" Banco : bancoCredito
+Pedido "1" *-- "0..*" Parecer : pareceres
+Parecer "0..*" --> "1" Agente : agente
+Contrato "0..1" --> "1" Pedido : pedido
+Contrato "0..*" --> "1" Agente : agente
+ContratoCredito "0..1" --> "1" Pedido : pedido
+ContratoCredito "0..*" --> "1" Banco : banco
+Automovel "0..*" --> "0..1" Usuario : proprietario
+
+note bottom of Pedido
+  Só pode ser alterado ou cancelado
+  com status ENVIADO ou EM_ANALISE.
+end note
+
+note top of Usuario
+  v3: conta desativada não entra mais,
+  mas pedidos e contratos ficam registrados.
+end note
+
+note bottom of Rendimento
+  Máximo de 3 por cliente.
+end note
+@enduml

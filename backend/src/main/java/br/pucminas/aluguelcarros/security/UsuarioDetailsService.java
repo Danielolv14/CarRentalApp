@@ -25,6 +25,7 @@ public class UsuarioDetailsService implements UserDetailsService {
         return User.withUsername(usuario.getLogin())
                 .password(usuario.getSenha())
                 .roles(Papeis.de(usuario).toArray(String[]::new))
+                .disabled(!usuario.isAtivo())
                 .build();
     }
 }

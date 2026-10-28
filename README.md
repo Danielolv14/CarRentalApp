@@ -28,9 +28,9 @@
 
 | Etapa do processo | Situação |
 |---|---|
-| Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1 (pacotes revisado na v2) |
+| Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1, revisada na v2 (pacotes) e na v3 (classes) |
 | Autenticação (login de clientes e agentes) | ✅ |
-| CRUD de cliente | ⏳ |
+| CRUD de cliente | ✅ |
 | Protótipo (criar pedido e ver o status) | ⏳ |
 | Revisão dos diagramas | contínua |
 
@@ -146,6 +146,14 @@ O sistema tem os **dois subsistemas** do enunciado, ligados por uma API REST:
 | `POST` | `/auth/cadastro/agente` | livre | Cadastra empresa ou banco (razão social e CNPJ) e devolve o token |
 | `POST` | `/auth/login` | livre | Confere usuário e senha e devolve o token |
 | `GET` | `/auth/me` | token | Dados do usuário logado |
+| `GET` | `/clientes/me` | cliente | Cadastro completo: dados pessoais, endereço, rendimentos e renda total |
+| `PUT` | `/clientes/me` | cliente | Altera nome, RG, profissão, endereço e a lista de rendimentos (até 3). O CPF e o usuário não mudam |
+| `DELETE` | `/clientes/me` | cliente | Exclui a conta (veja a regra abaixo) |
+
+**CRUD de cliente:**
+- O **C** é o próprio cadastro (`/auth/cadastro/cliente`).
+- O **R**, o **U** e o **D** ficam em `/clientes/me`. O cliente só enxerga a própria conta, porque o login vem do token. Um agente que tenta acessar recebe 403.
+- **Exclusão:** um cliente **sem pedidos** é apagado de verdade, junto com os rendimentos. Um cliente **com histórico** tem os pedidos ainda em análise cancelados e a conta **desativada**: não entra mais, mas os contratos executados continuam registrados (US05).
 
 Os erros voltam no formato `{"mensagem": "...", "campos": {"cpf": "CPF inválido."}}`: 400 para dados inválidos, 401 para login errado ou sem token, 409 para usuário, CPF ou CNPJ repetido.
 
@@ -160,7 +168,7 @@ Os erros voltam no formato `{"mensagem": "...", "campos": {"cpf": "CPF inválido
 | :---: | :---: |
 | <img src="docs/modelagem/v1/casos-de-uso.png" alt="Diagrama de casos de uso" width="420px"> | <img src="docs/modelagem/v2/pacotes.png" alt="Diagrama de pacotes" width="420px"> |
 | **Classes** | **Histórias de Usuário** |
-| <img src="docs/modelagem/v1/classes.png" alt="Diagrama de classes" width="420px"> | [15 histórias com critérios de aceitação](docs/modelagem/historias-de-usuario.md) |
+| <img src="docs/modelagem/v3/classes.png" alt="Diagrama de classes" width="420px"> | [15 histórias com critérios de aceitação](docs/modelagem/historias-de-usuario.md) |
 
 ### Versões dos modelos
 Cada revisão dos diagramas ganha uma pasta nova (`v2`, `v3`...), e as anteriores ficam guardadas, como pede o enunciado.
@@ -169,8 +177,9 @@ Cada revisão dos diagramas ganha uma pasta nova (`v2`, `v3`...), e as anteriore
 |---|---|---|
 | [v1](docs/modelagem/v1) | 28/10/2026 | Versão inicial: casos de uso, classes e pacotes |
 | [v2](docs/modelagem/v2) | 28/10/2026 | Pacotes: entram as dependências da autenticação (`service → security`, `dto → model`), o tratador de erros passa para `controller` e o front ganha `utils`. Conferido pelos imports, sem ciclos. Casos de uso e classes continuam iguais à v1. |
+| [v3](docs/modelagem/v3) | 28/10/2026 | Classes: `Usuario` ganha `ativo` e `desativar()`, para a exclusão de cliente com histórico (a conta é desativada e os contratos ficam). |
 
-Cada pasta guarda só os diagramas que mudaram naquela versão. Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v2/*.puml`.
+Cada pasta guarda só os diagramas que mudaram naquela versão. A versão atual de cada um é: casos de uso na v1, pacotes na v2 e classes na v3. Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v3/*.puml`.
 
 ---
 
@@ -285,7 +294,7 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 │   └── src/
 │       ├── main/java/br/pucminas/aluguelcarros/
 │       │   ├── controller/       # 🎮 Endpoints REST e tratamento de erros (C do MVC)
-│       │   ├── service/          # ⚙️ Casos de uso e transações (login, cadastro)
+│       │   ├── service/          # ⚙️ Casos de uso e transações (login, cadastro, perfil do cliente)
 │       │   ├── repository/       # 🗄️ Repositórios Spring Data JPA
 │       │   ├── model/            # 🧬 Entidades, enums e regras do domínio (M do MVC)
 │       │   ├── dto/              # ✉️ Entrada e saída da API, com Bean Validation
@@ -321,13 +330,15 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 ## 🎥 Demonstração
 
 ### 🌐 Aplicação Web
-Telas já implementadas (login e cadastro):
+Telas já implementadas (login, cadastro e meu perfil):
 
 | Login (senha errada) | Escolha de perfil |
 | :---: | :---: |
 | <img src="docs/img/telas/login.png" alt="Tela de login" width="420px"> | <img src="docs/img/telas/escolha-perfil.png" alt="Escolha de perfil" width="420px"> |
 | **Cadastro de cliente (renda)** | **Painel do agente (banco)** |
 | <img src="docs/img/telas/cadastro-cliente.png" alt="Cadastro de cliente" width="420px"> | <img src="docs/img/telas/painel-agente.png" alt="Painel do agente" width="420px"> |
+| **Meu perfil (alterações por salvar)** | |
+| <img src="docs/img/telas/meu-perfil.png" alt="Meu perfil" width="420px"> | |
 
 As demais telas (pedidos, avaliação, contratos e automóveis) estão no [Figma](https://www.figma.com/design/vPTstldZsygAGqDP3DTjqx) e em [`docs/wireframes/wireframes.html`](docs/wireframes/wireframes.html).
 
@@ -340,7 +351,14 @@ As demais telas (pedidos, avaliação, contratos e automóveis) estão no [Figma
 cd backend
 ./mvnw test
 ```
-São 30 testes:
+São 37 testes:
+- **API do CRUD de cliente** (`ClienteControllerTest`, 7 testes):
+  - consultar o cadastro completo;
+  - alterar dados e rendimentos sem mexer no CPF, ou tirar todos os rendimentos;
+  - validação;
+  - 401 sem token e 403 para agente;
+  - exclusão sem pedidos (apaga);
+  - exclusão com histórico (cancela os pedidos abertos e desativa a conta).
 - **API de autenticação** (`AuthControllerTest`, 14 testes com o Spring Security ligado):
   - cadastro de cliente, banco e empresa;
   - senha guardada com BCrypt;

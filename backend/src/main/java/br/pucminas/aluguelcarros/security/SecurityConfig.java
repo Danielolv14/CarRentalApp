@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(rotas -> rotas
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/cadastro/cliente", "/auth/cadastro/agente").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/clientes/**").hasRole("CLIENTE")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(conversorDePapeis())));
         return http.build();

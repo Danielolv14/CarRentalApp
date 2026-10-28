@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import Botao from '../../components/Botao.jsx'
 import CabecalhoPublico from '../../components/CabecalhoPublico.jsx'
 import Campo from '../../components/Campo.jsx'
+import EditorRendimentos from '../../components/EditorRendimentos.jsx'
 import Icone from '../../components/Icone.jsx'
 import Stepper from '../../components/Stepper.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { cpfValido, formatarMoeda, lerMoeda, mascaraCep, mascaraCpf, mascaraMoeda, somenteDigitos, UFS } from '../../utils/formatos.js'
+import { cpfValido, mascaraCep, mascaraCpf, somenteDigitos, UFS } from '../../utils/formatos.js'
+import { enderecoParaApi, rendimentosParaApi, validarEndereco, validarRendimentos } from '../../utils/validacoes.js'
 
 const PASSOS = ['Dados pessoais', 'Endereço', 'Profissão e renda', 'Acesso']
-const MAXIMO_RENDIMENTOS = 3
 
 const VAZIO = {
   nome: '', cpf: '', rg: '',
@@ -34,19 +35,8 @@ function validarPasso(passo, d) {
     else if (!cpfValido(d.cpf)) e.cpf = 'CPF inválido. Confira os 11 dígitos.'
     if (!d.rg.trim()) e.rg = 'Informe o RG.'
   }
-  if (passo === 1) {
-    if (somenteDigitos(d.cep).length !== 8) e['endereco.cep'] = 'CEP inválido.'
-    if (!d.logradouro.trim()) e['endereco.logradouro'] = 'Informe a rua.'
-    if (!d.numero.trim()) e['endereco.numero'] = 'Informe o número.'
-    if (!d.bairro.trim()) e['endereco.bairro'] = 'Informe o bairro.'
-    if (!d.cidade.trim()) e['endereco.cidade'] = 'Informe a cidade.'
-  }
-  if (passo === 2) {
-    d.rendimentos.forEach((r, i) => {
-      if (!r.entidade.trim()) e[`rendimentos[${i}].entidadeEmpregadora`] = 'Informe a entidade empregadora.'
-      if (!(lerMoeda(r.valor) > 0)) e[`rendimentos[${i}].valor`] = 'Informe o rendimento.'
-    })
-  }
+  if (passo === 1) Object.assign(e, validarEndereco(d))
+  if (passo === 2) Object.assign(e, validarRendimentos(d.rendimentos))
   if (passo === 3) {
     if (d.login.trim().length < 3) e.login = 'O usuário precisa ter pelo menos 3 caracteres.'
     if (d.senha.length < 6) e.senha = 'A senha precisa ter pelo menos 6 caracteres.'
@@ -61,8 +51,8 @@ function paraApi(d) {
     cpf: somenteDigitos(d.cpf),
     rg: d.rg.trim(),
     profissao: d.profissao.trim() || null,
-    endereco: { cep: somenteDigitos(d.cep), logradouro: d.logradouro, numero: d.numero, bairro: d.bairro, cidade: d.cidade, uf: d.uf },
-    rendimentos: d.rendimentos.map((r) => ({ entidadeEmpregadora: r.entidade.trim(), valor: lerMoeda(r.valor) })),
+    endereco: enderecoParaApi(d),
+    rendimentos: rendimentosParaApi(d.rendimentos),
     login: d.login.trim(),
     senha: d.senha,
   }
@@ -83,16 +73,8 @@ export default function CadastroCliente() {
     setErros((er) => ({ ...er, [campo]: undefined, [`endereco.${campo}`]: undefined }))
   }
 
-  const mudarRendimento = (i, campo, mascara) => (e) => {
-    const valor = mascara ? mascara(e.target.value) : e.target.value
-    setDados((d) => ({ ...d, rendimentos: d.rendimentos.map((r, j) => (j === i ? { ...r, [campo]: valor } : r)) }))
-  }
-
-  const adicionarRendimento = () =>
-    setDados((d) => ({ ...d, rendimentos: [...d.rendimentos, { entidade: '', valor: '' }] }))
-
-  const removerRendimento = (i) => {
-    setDados((d) => ({ ...d, rendimentos: d.rendimentos.filter((_, j) => j !== i) }))
+  const mudarRendimentos = (rendimentos) => {
+    setDados((d) => ({ ...d, rendimentos }))
     setErros({})
   }
 
@@ -126,9 +108,6 @@ export default function CadastroCliente() {
       setEnviando(false)
     }
   }
-
-  const rendaTotal = dados.rendimentos.reduce((total, r) => total + (lerMoeda(r.valor) ?? 0), 0)
-  const limiteRendimentos = dados.rendimentos.length >= MAXIMO_RENDIMENTOS
 
   return (
     <div className="pub">
@@ -190,43 +169,7 @@ export default function CadastroCliente() {
               {passo === 2 && (
                 <>
                   <Campo rotulo="Profissão" icone="briefcase" value={dados.profissao} onChange={mudar('profissao')} autoFocus />
-                  <div className="secao-rotulo">
-                    <span>Rendimentos</span>
-                    <span className="contador">
-                      {dados.rendimentos.length} de {MAXIMO_RENDIMENTOS}
-                    </span>
-                  </div>
-                  {dados.rendimentos.length === 0 && <p className="suave">Nenhum rendimento informado. Você pode adicionar até 3.</p>}
-                  <div className="rendimentos">
-                    {dados.rendimentos.map((r, i) => (
-                      <div className="rendimento" key={i}>
-                        <div className="rendimento-n">{i + 1}</div>
-                        <Campo rotulo={i === 0 ? 'Entidade empregadora' : undefined} value={r.entidade} onChange={mudarRendimento(i, 'entidade')} erro={erros[`rendimentos[${i}].entidadeEmpregadora`]} />
-                        <Campo className="valor" rotulo={i === 0 ? 'Rendimento mensal (R$)' : undefined} mono inputMode="decimal" placeholder="0,00" value={r.valor} onChange={mudarRendimento(i, 'valor', mascaraMoeda)} erro={erros[`rendimentos[${i}].valor`]} />
-                        <button type="button" className="botao-icone" onClick={() => removerRendimento(i)} aria-label={`Remover rendimento ${i + 1}`}>
-                          <Icone nome="trash" tamanho={18} cor="#6B7080" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="linha-adicionar">
-                    <Botao variante="secondary" icone="plus" onClick={adicionarRendimento} disabled={limiteRendimentos}>
-                      Adicionar empregador
-                    </Botao>
-                    {limiteRendimentos && (
-                      <span className="ajuda aviso">
-                        <Icone nome="info" tamanho={14} cor="#92400E" />
-                        Máximo de 3 rendimentos.
-                      </span>
-                    )}
-                  </div>
-                  {erros.rendimentos && <div className="ajuda erro">{erros.rendimentos}</div>}
-                  {dados.rendimentos.length > 0 && (
-                    <div className="total">
-                      <span>Renda mensal total</span>
-                      <span className="mono total-valor">{formatarMoeda(rendaTotal)}</span>
-                    </div>
-                  )}
+                  <EditorRendimentos rendimentos={dados.rendimentos} aoMudar={mudarRendimentos} erros={erros} />
                 </>
               )}
 

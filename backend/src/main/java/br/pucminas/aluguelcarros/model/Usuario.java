@@ -32,6 +32,10 @@ public abstract class Usuario {
     @Column(nullable = false, length = 120)
     private String nome;
 
+    /** Conta desativada não entra mais no sistema, mas o histórico (pedidos, contratos) fica. */
+    @Column(nullable = false)
+    private boolean ativo = true;
+
     protected Usuario() {
     }
 
@@ -42,6 +46,14 @@ public abstract class Usuario {
     }
 
     public abstract Perfil getPerfil();
+
+    public void desativar() {
+        this.ativo = false;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
 
     public Long getId() {
         return id;

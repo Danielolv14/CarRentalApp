@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { iniciais } from '../utils/formatos.js'
 import Icone from './Icone.jsx'
 import Marca from './Marca.jsx'
 
@@ -8,7 +9,7 @@ const MENU = {
     { para: '/cliente', icone: 'home', rotulo: 'Início' },
     { icone: 'plus', rotulo: 'Novo pedido' },
     { icone: 'clipboard', rotulo: 'Meus pedidos' },
-    { icone: 'user', rotulo: 'Meu perfil' },
+    { para: '/cliente/perfil', icone: 'user', rotulo: 'Meu perfil' },
   ],
   AGENTE: [
     { para: '/agente', icone: 'dashboard', rotulo: 'Painel' },
@@ -17,14 +18,6 @@ const MENU = {
     { icone: 'car', rotulo: 'Automóveis', so: 'EMPRESA' },
   ],
 }
-
-const iniciais = (nome) =>
-  nome
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('')
 
 const hoje = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
 
@@ -61,7 +54,7 @@ export default function LayoutApp({ children }) {
           <div className="nav-rotulo">{agente ? 'AGENTE' : 'MENU'}</div>
           {itens.map((item) =>
             item.para ? (
-              <NavLink key={item.rotulo} to={item.para} className={({ isActive }) => `nav-item ${isActive ? 'ativo' : ''}`}>
+              <NavLink key={item.rotulo} to={item.para} end className={({ isActive }) => `nav-item ${isActive ? 'ativo' : ''}`}>
                 <Icone nome={item.icone} tamanho={18} />
                 <span>{item.rotulo}</span>
               </NavLink>

@@ -31,6 +31,16 @@ export function AuthProvider({ children }) {
     setSessao(null)
   }, [])
 
+  /** Atualiza os dados do usuário logado (ex.: nome alterado no perfil) sem trocar o token. */
+  const atualizarUsuario = useCallback((alteracoes) => {
+    setSessao((atual) => {
+      if (!atual) return atual
+      const nova = { ...atual, usuario: { ...atual.usuario, ...alteracoes } }
+      localStorage.setItem(CHAVE, JSON.stringify(nova))
+      return nova
+    })
+  }, [])
+
   // Ao abrir o app, confirma com a API que o token guardado ainda vale.
   useEffect(() => {
     if (!sessao?.token) return
@@ -48,8 +58,9 @@ export function AuthProvider({ children }) {
       cadastrarCliente: async (dados) => guardar(await authService.cadastrarCliente(dados)),
       cadastrarAgente: async (dados) => guardar(await authService.cadastrarAgente(dados)),
       sair,
+      atualizarUsuario,
     }),
-    [sessao, guardar, sair],
+    [sessao, guardar, sair, atualizarUsuario],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>

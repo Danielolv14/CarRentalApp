@@ -2,14 +2,12 @@ package br.pucminas.aluguelcarros.service;
 
 import br.pucminas.aluguelcarros.dto.CadastroAgenteRequest;
 import br.pucminas.aluguelcarros.dto.CadastroClienteRequest;
-import br.pucminas.aluguelcarros.dto.EnderecoRequest;
 import br.pucminas.aluguelcarros.dto.TokenResponse;
 import br.pucminas.aluguelcarros.exception.ConflitoException;
 import br.pucminas.aluguelcarros.model.Agente;
 import br.pucminas.aluguelcarros.model.Banco;
 import br.pucminas.aluguelcarros.model.Cliente;
 import br.pucminas.aluguelcarros.model.Empresa;
-import br.pucminas.aluguelcarros.model.Endereco;
 import br.pucminas.aluguelcarros.model.Rendimento;
 import br.pucminas.aluguelcarros.model.Usuario;
 import br.pucminas.aluguelcarros.repository.AgenteRepository;
@@ -51,7 +49,7 @@ public class CadastroService {
         }
 
         Cliente cliente = new Cliente(login, encoder.encode(dados.senha()), dados.nome().trim(), dados.rg().trim(), cpf,
-                textoOuNulo(dados.profissao()), endereco(dados.endereco()));
+                textoOuNulo(dados.profissao()), dados.endereco().paraModelo());
         if (dados.rendimentos() != null) {
             dados.rendimentos().forEach(r ->
                     cliente.adicionarRendimento(new Rendimento(r.entidadeEmpregadora().trim(), r.valor())));
@@ -89,11 +87,6 @@ public class CadastroService {
         }
     }
 
-    private static Endereco endereco(EnderecoRequest e) {
-        return new Endereco(somenteDigitos(e.cep()), e.logradouro().trim(), e.numero().trim(), e.bairro().trim(),
-                e.cidade().trim(), e.uf().toUpperCase(Locale.ROOT));
-    }
-
     static String normalizarLogin(String login) {
         return login == null ? null : login.trim().toLowerCase(Locale.ROOT);
     }
@@ -102,7 +95,7 @@ public class CadastroService {
         return valor.replaceAll("\\D", "");
     }
 
-    private static String textoOuNulo(String valor) {
+    static String textoOuNulo(String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim();
     }
 }

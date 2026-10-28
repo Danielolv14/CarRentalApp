@@ -56,6 +56,18 @@ export function mascaraMoeda(texto) {
   return centavos === undefined ? milhar : `${milhar},${centavos.slice(0, 2)}`
 }
 
+/** 6200.5 → "6.200,50" (para preencher um campo com máscara de moeda). */
+export const moedaParaCampo = (numero) => mascaraMoeda(Number(numero).toFixed(2).replace('.', ','))
+
+/** "Mariana Costa" → "MC" */
+export const iniciais = (nome) =>
+  (nome ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join('')
+
 export const UFS = [
   'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA',
   'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',

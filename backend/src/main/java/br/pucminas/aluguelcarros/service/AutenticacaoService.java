@@ -41,6 +41,8 @@ public class AutenticacaoService {
     }
 
     private Usuario buscar(String login) {
-        return usuarios.findByLogin(login).orElseThrow(() -> new BadCredentialsException("Usuário não encontrado."));
+        return usuarios.findByLogin(login)
+                .filter(Usuario::isAtivo)
+                .orElseThrow(() -> new BadCredentialsException("Usuário não encontrado."));
     }
 }
