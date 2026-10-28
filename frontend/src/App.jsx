@@ -7,6 +7,9 @@ import CadastroCliente from './pages/publico/CadastroCliente.jsx'
 import CadastroAgente from './pages/publico/CadastroAgente.jsx'
 import InicioCliente from './pages/cliente/InicioCliente.jsx'
 import MeuPerfil from './pages/cliente/MeuPerfil.jsx'
+import NovoPedido from './pages/cliente/NovoPedido.jsx'
+import MeusPedidos from './pages/cliente/MeusPedidos.jsx'
+import DetalhePedido from './pages/cliente/DetalhePedido.jsx'
 import PainelAgente from './pages/agente/PainelAgente.jsx'
 
 export default function App() {
@@ -33,6 +36,30 @@ export default function App() {
         element={
           <RotaProtegida perfil="CLIENTE">
             <MeuPerfil />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/cliente/pedidos"
+        element={
+          <RotaProtegida perfil="CLIENTE">
+            <MeusPedidos />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/cliente/pedidos/novo"
+        element={
+          <RotaProtegida perfil="CLIENTE">
+            <NovoPedido />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/cliente/pedidos/:id"
+        element={
+          <RotaProtegida perfil="CLIENTE">
+            <DetalhePedido />
           </RotaProtegida>
         }
       />

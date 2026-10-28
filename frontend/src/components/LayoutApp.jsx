@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { iniciais } from '../utils/formatos.js'
 import Icone from './Icone.jsx'
@@ -7,8 +7,9 @@ import Marca from './Marca.jsx'
 const MENU = {
   CLIENTE: [
     { para: '/cliente', icone: 'home', rotulo: 'Início' },
-    { icone: 'plus', rotulo: 'Novo pedido' },
-    { icone: 'clipboard', rotulo: 'Meus pedidos' },
+    { para: '/cliente/pedidos/novo', icone: 'plus', rotulo: 'Novo pedido' },
+    // "Meus pedidos" fica marcado também no detalhe de um pedido (/cliente/pedidos/12)
+    { para: '/cliente/pedidos', icone: 'clipboard', rotulo: 'Meus pedidos', ativo: (caminho) => /^\/cliente\/pedidos(\/\d+)?$/.test(caminho) },
     { para: '/cliente/perfil', icone: 'user', rotulo: 'Meu perfil' },
   ],
   AGENTE: [
@@ -25,6 +26,7 @@ const hoje = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric',
 export default function LayoutApp({ children }) {
   const { usuario, sair } = useAuth()
   const navegar = useNavigate()
+  const { pathname } = useLocation()
   const agente = usuario.perfil === 'AGENTE'
   const itens = MENU[usuario.perfil].filter((i) => !i.so || i.so === usuario.tipoAgente)
 
@@ -54,7 +56,12 @@ export default function LayoutApp({ children }) {
           <div className="nav-rotulo">{agente ? 'AGENTE' : 'MENU'}</div>
           {itens.map((item) =>
             item.para ? (
-              <NavLink key={item.rotulo} to={item.para} end className={({ isActive }) => `nav-item ${isActive ? 'ativo' : ''}`}>
+              <NavLink
+                key={item.rotulo}
+                to={item.para}
+                end
+                className={({ isActive }) => `nav-item ${(item.ativo ? item.ativo(pathname) : isActive) ? 'ativo' : ''}`}
+              >
                 <Icone nome={item.icone} tamanho={18} />
                 <span>{item.rotulo}</span>
               </NavLink>

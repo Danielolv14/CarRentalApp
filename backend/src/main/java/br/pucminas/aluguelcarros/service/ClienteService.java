@@ -64,7 +64,8 @@ public class ClienteService {
         cliente.desativar();
     }
 
-    private Cliente logado(String login) {
+    /** Cliente ativo dono do token; se não existir mais, a sessão é inválida (401). */
+    Cliente logado(String login) {
         return clientes.findByLogin(login)
                 .filter(Usuario::isAtivo)
                 .orElseThrow(() -> new BadCredentialsException("Cliente não encontrado."));

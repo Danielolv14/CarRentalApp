@@ -2,6 +2,7 @@ package br.pucminas.aluguelcarros.controller;
 
 import br.pucminas.aluguelcarros.dto.ErroResponse;
 import br.pucminas.aluguelcarros.exception.ConflitoException;
+import br.pucminas.aluguelcarros.exception.NaoEncontradoException;
 import br.pucminas.aluguelcarros.exception.RegraNegocioException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,12 @@ public class TratadorDeErros {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ErroResponse naoAutenticado() {
         return ErroResponse.de("Usuário ou senha inválidos.");
+    }
+
+    @ExceptionHandler(NaoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    ErroResponse naoEncontrado(NaoEncontradoException e) {
+        return ErroResponse.de(e.getMessage());
     }
 
     @ExceptionHandler(ConflitoException.class)

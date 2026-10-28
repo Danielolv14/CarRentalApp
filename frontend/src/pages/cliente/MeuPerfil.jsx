@@ -8,6 +8,7 @@ import LayoutApp from '../../components/LayoutApp.jsx'
 import Modal from '../../components/Modal.jsx'
 import Toast from '../../components/Toast.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
+import useSessaoExpirada from '../../hooks/useSessaoExpirada.js'
 import * as clienteService from '../../services/clienteService.js'
 import { iniciais, mascaraCep, mascaraCpf, moedaParaCampo, UFS } from '../../utils/formatos.js'
 import { enderecoParaApi, rendimentosParaApi, validarEndereco, validarRendimentos } from '../../utils/validacoes.js'
@@ -49,6 +50,7 @@ const camposAlterados = (atual, original) =>
 export default function MeuPerfil() {
   const { token, sair, atualizarUsuario } = useAuth()
   const navegar = useNavigate()
+  const sessaoExpirada = useSessaoExpirada()
   const [cliente, setCliente] = useState(null)
   const [original, setOriginal] = useState(null)
   const [form, setForm] = useState(null)
@@ -58,11 +60,6 @@ export default function MeuPerfil() {
   const [confirmarExclusao, setConfirmarExclusao] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
   const [aviso, setAviso] = useState(null)
-
-  const sessaoExpirada = useCallback(() => {
-    sair()
-    navegar('/login', { replace: true, state: { aviso: 'Sua sessão expirou. Entre de novo.' } })
-  }, [sair, navegar])
 
   const carregar = useCallback((dados) => {
     const f = paraFormulario(dados)

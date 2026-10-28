@@ -31,7 +31,7 @@
 | Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1, revisada na v2 (pacotes) e na v3 (classes) |
 | Autenticação (login de clientes e agentes) | ✅ |
 | CRUD de cliente | ✅ |
-| Protótipo (criar pedido e ver o status) | ⏳ |
+| Protótipo (criar pedido e ver o status) | ✅ (lado do cliente; a avaliação pelo agente é a próxima etapa) |
 | Revisão dos diagramas | contínua |
 
 ---
@@ -149,6 +149,14 @@ O sistema tem os **dois subsistemas** do enunciado, ligados por uma API REST:
 | `GET` | `/clientes/me` | cliente | Cadastro completo: dados pessoais, endereço, rendimentos e renda total |
 | `PUT` | `/clientes/me` | cliente | Altera nome, RG, profissão, endereço e a lista de rendimentos (até 3). O CPF e o usuário não mudam |
 | `DELETE` | `/clientes/me` | cliente | Exclui a conta (veja a regra abaixo) |
+| `GET` | `/automoveis` | token | Frota para escolher no pedido |
+| `GET` | `/bancos` | token | Bancos para pedir crédito |
+| `POST` | `/pedidos` | cliente | Cria o pedido (automóvel, retirada, devolução e crédito opcional). Começa como `ENVIADO` |
+| `GET` | `/pedidos` | cliente | Meus pedidos, do mais novo para o mais antigo |
+| `GET` | `/pedidos/{id}` | cliente | Detalhe com status, crédito e pareceres. O pedido de outro cliente responde 404 |
+| `POST` | `/pedidos/{id}/cancelar` | cliente | Cancela, só se estiver `ENVIADO` ou `EM_ANALISE` (senão 422) |
+
+**Frota inicial:** quando a tabela de automóveis está vazia, a API cadastra os 6 carros dos wireframes ao subir (`config/CargaInicial`). Para desligar, use `APP_CARGA_INICIAL=false`.
 
 **CRUD de cliente:**
 - O **C** é o próprio cadastro (`/auth/cadastro/cliente`).
@@ -166,7 +174,7 @@ Os erros voltam no formato `{"mensagem": "...", "campos": {"cpf": "CPF inválido
 
 | Casos de Uso | Pacotes (Visão Lógica) |
 | :---: | :---: |
-| <img src="docs/modelagem/v1/casos-de-uso.png" alt="Diagrama de casos de uso" width="420px"> | <img src="docs/modelagem/v2/pacotes.png" alt="Diagrama de pacotes" width="420px"> |
+| <img src="docs/modelagem/v1/casos-de-uso.png" alt="Diagrama de casos de uso" width="420px"> | <img src="docs/modelagem/v4/pacotes.png" alt="Diagrama de pacotes" width="420px"> |
 | **Classes** | **Histórias de Usuário** |
 | <img src="docs/modelagem/v3/classes.png" alt="Diagrama de classes" width="420px"> | [15 histórias com critérios de aceitação](docs/modelagem/historias-de-usuario.md) |
 
@@ -178,8 +186,9 @@ Cada revisão dos diagramas ganha uma pasta nova (`v2`, `v3`...), e as anteriore
 | [v1](docs/modelagem/v1) | 28/10/2026 | Versão inicial: casos de uso, classes e pacotes |
 | [v2](docs/modelagem/v2) | 28/10/2026 | Pacotes: entram as dependências da autenticação (`service → security`, `dto → model`), o tratador de erros passa para `controller` e o front ganha `utils`. Conferido pelos imports, sem ciclos. Casos de uso e classes continuam iguais à v1. |
 | [v3](docs/modelagem/v3) | 28/10/2026 | Classes: `Usuario` ganha `ativo` e `desativar()`, para a exclusão de cliente com histórico (a conta é desativada e os contratos ficam). |
+| [v4](docs/modelagem/v4) | 28/10/2026 | Pacotes: `config` passa a depender de `repository` e `model` (frota inicial do protótipo). No front entra `hooks`, e as páginas chamam os `services`. Conferido pelos imports. |
 
-Cada pasta guarda só os diagramas que mudaram naquela versão. A versão atual de cada um é: casos de uso na v1, pacotes na v2 e classes na v3. Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v3/*.puml`.
+Cada pasta guarda só os diagramas que mudaram naquela versão. A versão atual de cada um é: casos de uso na v1, classes na v3 e pacotes na v4. Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v4/*.puml`.
 
 ---
 
@@ -299,7 +308,7 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 │       │   ├── model/            # 🧬 Entidades, enums e regras do domínio (M do MVC)
 │       │   ├── dto/              # ✉️ Entrada e saída da API, com Bean Validation
 │       │   ├── security/         # 🛡️ Spring Security, BCrypt e emissão do JWT
-│       │   ├── config/           # 🔧 CORS
+│       │   ├── config/           # 🔧 CORS e frota inicial do protótipo
 │       │   └── exception/        # 💥 Exceções do domínio
 │       ├── main/resources/
 │       │   └── application.properties
@@ -315,8 +324,9 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 │       ├── pages/                # 📄 Telas por perfil: publico, cliente, agente (V do MVC)
 │       ├── components/           # 🧱 Botão, campo, placa Mercosul, menu lateral, rota protegida...
 │       ├── context/              # 🔐 Sessão (token e usuário logado)
+│       ├── hooks/                # 🎣 Hooks (ex.: sessão expirada → volta ao login)
 │       ├── services/             # 🔌 Chamadas HTTP para a API
-│       ├── utils/                # 🛠️ Máscaras e validação de CPF, CNPJ, CEP e moeda
+│       ├── utils/                # 🛠️ Máscaras, validações, datas e status dos pedidos
 │       └── styles/               # 🎨 Tokens do design system e estilos
 │
 └── docs/                         # 📚 Documentação
@@ -330,17 +340,21 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 ## 🎥 Demonstração
 
 ### 🌐 Aplicação Web
-Telas já implementadas (login, cadastro e meu perfil):
+Telas já implementadas (login, cadastro, meu perfil e o protótipo de pedido):
 
 | Login (senha errada) | Escolha de perfil |
 | :---: | :---: |
 | <img src="docs/img/telas/login.png" alt="Tela de login" width="420px"> | <img src="docs/img/telas/escolha-perfil.png" alt="Escolha de perfil" width="420px"> |
 | **Cadastro de cliente (renda)** | **Painel do agente (banco)** |
 | <img src="docs/img/telas/cadastro-cliente.png" alt="Cadastro de cliente" width="420px"> | <img src="docs/img/telas/painel-agente.png" alt="Painel do agente" width="420px"> |
-| **Meu perfil (alterações por salvar)** | |
-| <img src="docs/img/telas/meu-perfil.png" alt="Meu perfil" width="420px"> | |
+| **Meu perfil (alterações por salvar)** | **Início do cliente** |
+| <img src="docs/img/telas/meu-perfil.png" alt="Meu perfil" width="420px"> | <img src="docs/img/telas/inicio-cliente.png" alt="Início do cliente" width="420px"> |
+| **Novo pedido (com crédito bancário)** | **Detalhe do pedido** |
+| <img src="docs/img/telas/novo-pedido.png" alt="Novo pedido" width="420px"> | <img src="docs/img/telas/detalhe-pedido.png" alt="Detalhe do pedido" width="420px"> |
+| **Meus pedidos** | |
+| <img src="docs/img/telas/meus-pedidos.png" alt="Meus pedidos" width="420px"> | |
 
-As demais telas (pedidos, avaliação, contratos e automóveis) estão no [Figma](https://www.figma.com/design/vPTstldZsygAGqDP3DTjqx) e em [`docs/wireframes/wireframes.html`](docs/wireframes/wireframes.html).
+As telas do agente que faltam (avaliação, execução do contrato, contratos e automóveis) estão no [Figma](https://www.figma.com/design/vPTstldZsygAGqDP3DTjqx) e em [`docs/wireframes/wireframes.html`](docs/wireframes/wireframes.html).
 
 ---
 
@@ -351,7 +365,14 @@ As demais telas (pedidos, avaliação, contratos e automóveis) estão no [Figma
 cd backend
 ./mvnw test
 ```
-São 37 testes:
+São 44 testes:
+- **API de pedidos** (`PedidoControllerTest`, 7 testes):
+  - listas de automóveis e bancos;
+  - pedido com e sem crédito;
+  - datas inválidas, automóvel ou banco inexistente e campos obrigatórios;
+  - um cliente não vê o pedido de outro;
+  - cancelar e não cancelar de novo;
+  - agente barrado nas rotas do cliente.
 - **API do CRUD de cliente** (`ClienteControllerTest`, 7 testes):
   - consultar o cadastro completo;
   - alterar dados e rendimentos sem mexer no CPF, ou tirar todos os rendimentos;
