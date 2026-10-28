@@ -1,0 +1,76 @@
+@startuml pacotes
+!pragma layout smetana
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #3F4450
+skinparam PackageBorderColor #15181E
+skinparam PackageBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #1F4FD8
+skinparam DatabaseBackgroundColor #E8EEFC
+skinparam NoteBackgroundColor #FFF6D6
+skinparam NoteBorderColor #D9A300
+skinparam TitleFontSize 18
+
+title Diagrama de Pacotes (Visão Lógica) · Sistema de Aluguel de Carros (v2)
+set separator none
+
+package "Construção dinâmica das páginas web\n(front-end · React + Vite) <<subsistema>>" as FRONT #F5F4F0 {
+  package pages {
+    package publico
+    package cliente
+    package agente
+  }
+  package components
+  package context
+  package services
+  package utils
+  package styles
+}
+
+package "Gestão de pedidos e contratos\n(back-end · Spring Boot, MVC) <<subsistema>>" as BACK #F3F6FE {
+  package controller
+  package dto
+  package service
+  package security
+  package repository
+  package model
+  package exception
+  package config
+}
+
+database "Supabase\n(PostgreSQL)" as DB
+
+pages ..> components
+pages ..> context
+pages ..> utils
+components ..> context
+components ..> styles
+context ..> services
+
+services ..> controller : HTTP / JSON (REST)\nAuthorization: Bearer <JWT>
+
+controller ..> service
+controller ..> dto
+controller ..> exception
+service ..> dto
+service ..> security
+service ..> repository
+service ..> model
+service ..> exception
+security ..> repository
+security ..> model
+dto ..> model
+repository ..> model
+model ..> exception
+repository ..> DB : JPA / JDBC
+
+note as N1
+  <b>MVC</b>
+  M (model): entidades JPA, enums e regras do domínio
+  C (controller): endpoints REST e tratamento de erros
+  V (view): telas React do outro subsistema
+  <b>v2</b>: dependências conferidas pelos imports, sem ciclos
+end note
+@enduml

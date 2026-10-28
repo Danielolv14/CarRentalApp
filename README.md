@@ -28,8 +28,8 @@
 
 | Etapa do processo | Situação |
 |---|---|
-| Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1 |
-| Autenticação (login de clientes e agentes) | ⏳ |
+| Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1 (pacotes revisado na v2) |
+| Autenticação (login de clientes e agentes) | ✅ |
 | CRUD de cliente | ⏳ |
 | Protótipo (criar pedido e ver o status) | ⏳ |
 | Revisão dos diagramas | contínua |
@@ -98,8 +98,9 @@ O sistema só pode ser usado depois do cadastro e do login com usuário e senha.
 ## 🛠 Tecnologias Utilizadas
 
 ### 💻 Front-end
-* **Biblioteca:** React 18
+* **Biblioteca:** React 18 e React Router 6
 * **Linguagem:** JavaScript (ES2022+)
+* **Estado de login:** Context API (`context/AuthContext.jsx`), com o token guardado no `localStorage`
 * **Estilização:** CSS com tokens próprios (`src/styles/tokens.css`), fontes Sora, Inter e JetBrains Mono
 * **Build Tool:** Vite 5
 
@@ -109,7 +110,7 @@ O sistema só pode ser usado depois do cadastro e do login com usuário e senha.
 * **Build e dependências:** Apache Maven
 * **Banco de Dados:** Supabase (PostgreSQL)
 * **ORM:** Hibernate / JPA
-* **Autenticação:** login com usuário e senha (Spring Security + BCrypt)
+* **Autenticação:** login com usuário e senha (Spring Security + BCrypt) e token JWT HS256 (`spring-boot-starter-security-oauth2-resource-server`)
 
 ### ⚙️ Infraestrutura & Ferramentas
 * **Banco gerenciado:** Supabase
@@ -132,6 +133,22 @@ O sistema tem os **dois subsistemas** do enunciado, ligados por uma API REST:
    - `security`: login e permissões por perfil.
 2. **Construção dinâmica das páginas web (front-end, React + Vite):** é o **V** do MVC. As páginas ficam separadas por perfil (`pages/publico`, `pages/cliente` e `pages/agente`) e consomem a API pelo `services/api.js`.
 
+**Autenticação**
+1. No cadastro, a senha é guardada com **BCrypt**. O usuário já sai logado.
+2. No login, o Spring Security confere a senha e a API devolve um **JWT** assinado (HS256) que vale 8 horas.
+3. O front guarda o token e o envia em toda chamada (`Authorization: Bearer <token>`).
+4. Todas as rotas da API exigem o token, menos o login e o cadastro. Dentro do token vão os papéis: `CLIENTE`, ou `AGENTE` mais `EMPRESA` ou `BANCO`.
+5. No front, `RotaProtegida` manda para o login quem não está logado e leva cada perfil para a sua área (`/cliente` ou `/agente`).
+
+| Método | Rota | Acesso | O que faz |
+|---|---|---|---|
+| `POST` | `/auth/cadastro/cliente` | livre | Cadastra o cliente (dados pessoais, endereço e até 3 rendimentos) e devolve o token |
+| `POST` | `/auth/cadastro/agente` | livre | Cadastra empresa ou banco (razão social e CNPJ) e devolve o token |
+| `POST` | `/auth/login` | livre | Confere usuário e senha e devolve o token |
+| `GET` | `/auth/me` | token | Dados do usuário logado |
+
+Os erros voltam no formato `{"mensagem": "...", "campos": {"cpf": "CPF inválido."}}`: 400 para dados inválidos, 401 para login errado ou sem token, 409 para usuário, CPF ou CNPJ repetido.
+
 **Decisões importantes**
 - A herança `Usuario → Cliente | Agente → Empresa | Banco` usa a estratégia `JOINED`: uma tabela por classe, que espelha o diagrama de classes.
 - As regras ficam nas entidades, não espalhadas pelos controllers. Assim o diagrama de classes (com os métodos) bate com o código.
@@ -141,7 +158,7 @@ O sistema tem os **dois subsistemas** do enunciado, ligados por uma API REST:
 
 | Casos de Uso | Pacotes (Visão Lógica) |
 | :---: | :---: |
-| <img src="docs/modelagem/v1/casos-de-uso.png" alt="Diagrama de casos de uso" width="420px"> | <img src="docs/modelagem/v1/pacotes.png" alt="Diagrama de pacotes" width="420px"> |
+| <img src="docs/modelagem/v1/casos-de-uso.png" alt="Diagrama de casos de uso" width="420px"> | <img src="docs/modelagem/v2/pacotes.png" alt="Diagrama de pacotes" width="420px"> |
 | **Classes** | **Histórias de Usuário** |
 | <img src="docs/modelagem/v1/classes.png" alt="Diagrama de classes" width="420px"> | [15 histórias com critérios de aceitação](docs/modelagem/historias-de-usuario.md) |
 
@@ -151,8 +168,9 @@ Cada revisão dos diagramas ganha uma pasta nova (`v2`, `v3`...), e as anteriore
 | Versão | Data | O que mudou |
 |---|---|---|
 | [v1](docs/modelagem/v1) | 28/10/2026 | Versão inicial: casos de uso, classes e pacotes |
+| [v2](docs/modelagem/v2) | 28/10/2026 | Pacotes: entram as dependências da autenticação (`service → security`, `dto → model`), o tratador de erros passa para `controller` e o front ganha `utils`. Conferido pelos imports, sem ciclos. Casos de uso e classes continuam iguais à v1. |
 
-Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v1/*.puml`.
+Cada pasta guarda só os diagramas que mudaram naquela versão. Para gerar as imagens de novo a partir dos `.puml`: `java -jar plantuml.jar -tpng docs/modelagem/v2/*.puml`.
 
 ---
 
@@ -178,6 +196,8 @@ Copie `backend/.env.example` para `backend/.env` e preencha:
 | `DB_PASSWORD` | Senha do banco | `********` |
 | `JPA_DDL_AUTO` | Estratégia do Hibernate | `update` |
 | `CORS_ALLOWED_ORIGINS` | Origem do front-end | `http://localhost:5173` |
+| `JWT_SECRET` | Segredo que assina o token (mínimo de 32 caracteres) | gere com `openssl rand -base64 48` |
+| `JWT_VALIDADE_HORAS` | Quanto tempo o login vale | `8` |
 
 #### 2 Front-end (React, Vite)
 Copie `frontend/.env.example` para `frontend/.env`:
@@ -223,6 +243,13 @@ cd backend
 ```
 A API sobe em `http://localhost:8080`.
 
+> [!TIP]
+> **Sem Supabase?** Para testar ou demonstrar, dá para subir a API com um banco H2 em memória (os dados somem quando ela para):
+> ```bash
+> cd backend
+> ./mvnw spring-boot:test-run -Dspring-boot.run.profiles=h2
+> ```
+
 #### Terminal 2: Front-end (React, Vite)
 ```bash
 cd frontend
@@ -257,28 +284,31 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 │   ├── pom.xml                   # 🛠️ Build e dependências (Maven)
 │   └── src/
 │       ├── main/java/br/pucminas/aluguelcarros/
-│       │   ├── controller/       # 🎮 Endpoints REST (C do MVC)
-│       │   ├── service/          # ⚙️ Casos de uso e transações
+│       │   ├── controller/       # 🎮 Endpoints REST e tratamento de erros (C do MVC)
+│       │   ├── service/          # ⚙️ Casos de uso e transações (login, cadastro)
 │       │   ├── repository/       # 🗄️ Repositórios Spring Data JPA
 │       │   ├── model/            # 🧬 Entidades, enums e regras do domínio (M do MVC)
-│       │   ├── dto/              # ✉️ Entrada e saída da API
-│       │   ├── security/         # 🛡️ Login e permissões
-│       │   ├── config/           # 🔧 CORS e configurações
+│       │   ├── dto/              # ✉️ Entrada e saída da API, com Bean Validation
+│       │   ├── security/         # 🛡️ Spring Security, BCrypt e emissão do JWT
+│       │   ├── config/           # 🔧 CORS
 │       │   └── exception/        # 💥 Exceções do domínio
 │       ├── main/resources/
 │       │   └── application.properties
-│       └── test/java/...         # 🧪 Testes do domínio e do mapeamento JPA
+│       ├── test/java/...         # 🧪 Testes do domínio, do JPA e da API
+│       └── test/resources/       # 🧪 Perfis "test" e "h2" (banco em memória)
 │
 ├── frontend/                     # 📁 Subsistema de construção das páginas web (React + Vite)
 │   ├── .env.example              # 🧩 Variáveis do front-end
 │   ├── index.html
 │   ├── package.json
+│   ├── public/                   # 🖼️ Favicon
 │   └── src/
 │       ├── pages/                # 📄 Telas por perfil: publico, cliente, agente (V do MVC)
-│       ├── components/           # 🧱 Componentes reutilizáveis
-│       ├── context/              # 🔐 Estado de login
-│       ├── services/api.js       # 🔌 Chamadas HTTP para a API
-│       └── styles/               # 🎨 Tokens do design system e estilos globais
+│       ├── components/           # 🧱 Botão, campo, placa Mercosul, menu lateral, rota protegida...
+│       ├── context/              # 🔐 Sessão (token e usuário logado)
+│       ├── services/             # 🔌 Chamadas HTTP para a API
+│       ├── utils/                # 🛠️ Máscaras e validação de CPF, CNPJ, CEP e moeda
+│       └── styles/               # 🎨 Tokens do design system e estilos
 │
 └── docs/                         # 📚 Documentação
     ├── modelagem/                # 📐 Histórias de usuário e diagramas UML por versão (v1, v2...)
@@ -291,7 +321,15 @@ java -jar target/aluguel-carros-0.0.1-SNAPSHOT.jar
 ## 🎥 Demonstração
 
 ### 🌐 Aplicação Web
-Enquanto o front-end está em construção, as telas de referência estão no [Figma](https://www.figma.com/design/vPTstldZsygAGqDP3DTjqx) e em [`docs/wireframes/wireframes.html`](docs/wireframes/wireframes.html): login, cadastro, início do cliente, novo pedido, meus pedidos, detalhe do pedido, perfil, painel do agente, avaliação do pedido, execução do contrato, contratos e automóveis.
+Telas já implementadas (login e cadastro):
+
+| Login (senha errada) | Escolha de perfil |
+| :---: | :---: |
+| <img src="docs/img/telas/login.png" alt="Tela de login" width="420px"> | <img src="docs/img/telas/escolha-perfil.png" alt="Escolha de perfil" width="420px"> |
+| **Cadastro de cliente (renda)** | **Painel do agente (banco)** |
+| <img src="docs/img/telas/cadastro-cliente.png" alt="Cadastro de cliente" width="420px"> | <img src="docs/img/telas/painel-agente.png" alt="Painel do agente" width="420px"> |
+
+As demais telas (pedidos, avaliação, contratos e automóveis) estão no [Figma](https://www.figma.com/design/vPTstldZsygAGqDP3DTjqx) e em [`docs/wireframes/wireframes.html`](docs/wireframes/wireframes.html).
 
 ---
 
@@ -302,11 +340,18 @@ Enquanto o front-end está em construção, as telas de referência estão no [F
 cd backend
 ./mvnw test
 ```
-São 16 testes:
+São 30 testes:
+- **API de autenticação** (`AuthControllerTest`, 14 testes com o Spring Security ligado):
+  - cadastro de cliente, banco e empresa;
+  - senha guardada com BCrypt;
+  - CPF e CNPJ inválidos ou repetidos, mais de 3 rendimentos e endereço incompleto;
+  - login certo, login errado e usuário inexistente;
+  - rota protegida sem token e com token adulterado;
+  - CORS liberado para o front.
 - **Domínio** (`model`): ciclo de status do pedido, limite de 3 rendimentos, parecer com justificativa, execução de contrato e parcela pela tabela Price.
 - **Mapeamento JPA** (`repository`): o fluxo inteiro (cliente, pedido, parecer, crédito e contrato) é salvo e lido num H2 em memória.
 
-*Ferramentas: JUnit 5, AssertJ, Spring Boot Test (`@DataJpaTest`) e H2.*
+*Ferramentas: JUnit 5, AssertJ, Spring Boot Test (`@SpringBootTest`, MockMvc, `@DataJpaTest`) e H2.*
 
 ---
 
