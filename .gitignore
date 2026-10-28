@@ -1,0 +1,20 @@
+# Segredos (use os .env.example como modelo)
+.env
+**/.env
+
+# Back-end (Maven)
+backend/target/
+
+# Front-end (Vite)
+frontend/node_modules/
+frontend/dist/
+
+# Python (gerador dos wireframes)
+__pycache__/
+
+# IDEs e sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

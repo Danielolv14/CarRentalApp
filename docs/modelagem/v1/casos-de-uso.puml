@@ -1,0 +1,71 @@
+@startuml casos-de-uso
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #3F4450
+skinparam ActorBorderColor #15181E
+skinparam ActorBackgroundColor #F5B700
+skinparam UsecaseBorderColor #1F4FD8
+skinparam UsecaseBackgroundColor #F3F6FE
+skinparam RectangleBorderColor #15181E
+skinparam RectangleFontStyle bold
+skinparam NoteBackgroundColor #FFF6D6
+skinparam NoteBorderColor #D9A300
+skinparam TitleFontSize 18
+
+title Diagrama de Casos de Uso · Sistema de Aluguel de Carros (v1)
+
+actor "Visitante" as Visitante
+actor "Usuário" as Usuario
+actor "Cliente" as Cliente
+actor "Agente" as Agente
+actor "Empresa" as Empresa
+actor "Banco" as Banco
+
+Usuario <|-- Cliente
+Usuario <|-- Agente
+Agente <|-- Empresa
+Agente <|-- Banco
+
+rectangle "Sistema de Aluguel de Carros" {
+  usecase "UC01 Realizar login" as UC01
+  usecase "UC02 Cadastrar-se" as UC02
+  usecase "UC03 Manter dados cadastrais" as UC03
+  usecase "UC04 Introduzir pedido de aluguel" as UC04
+  usecase "UC05 Consultar pedidos" as UC05
+  usecase "UC06 Modificar pedido" as UC06
+  usecase "UC07 Cancelar pedido" as UC07
+  usecase "UC08 Solicitar crédito bancário" as UC08
+  usecase "UC09 Avaliar pedido\n(parecer financeiro)" as UC09
+  usecase "UC10 Conceder contrato de crédito" as UC10
+  usecase "UC11 Executar contrato" as UC11
+  usecase "UC12 Consultar contratos" as UC12
+  usecase "UC13 Manter automóveis" as UC13
+}
+
+Visitante -- UC02
+Usuario -- UC01
+
+Cliente -- UC03
+Cliente -- UC04
+Cliente -- UC05
+Cliente -- UC06
+Cliente -- UC07
+
+Agente -- UC05
+Agente -- UC06
+Agente -- UC09
+Agente -- UC11
+Agente -- UC12
+
+Banco -- UC10
+Empresa -- UC13
+
+UC08 .> UC04 : <<extend>>
+UC10 .> UC09 : <<extend>>
+
+note "Todos os casos de uso, exceto UC01 e UC02,\nexigem usuário autenticado (login e senha)." as N1
+@enduml

@@ -1,0 +1,35 @@
+/* Tokens do design system (mesmos valores dos wireframes em docs/wireframes). */
+:root {
+  --cor-fundo: #f5f4f0;
+  --cor-superficie: #ffffff;
+  --cor-borda: #e3e1da;
+  --cor-grafite: #15181e;
+  --cor-texto-2: #3f4450;
+  --cor-texto-suave: #6b7080;
+  --cor-primaria: #1f4fd8;
+  --cor-primaria-hover: #1a43b8;
+  --cor-destaque: #f5b700;
+  --cor-perigo: #b42318;
+
+  /* Status do pedido: texto / fundo */
+  --status-enviado: #475569;
+  --status-enviado-fundo: #e2e8f0;
+  --status-analise: #92400e;
+  --status-analise-fundo: #fef3c7;
+  --status-aprovado: #166534;
+  --status-aprovado-fundo: #dcfce7;
+  --status-reprovado: #991b1b;
+  --status-reprovado-fundo: #fee2e2;
+  --status-contratado: #1e40af;
+  --status-contratado-fundo: #dbeafe;
+  --status-cancelado: #6b7280;
+  --status-cancelado-fundo: #f3f4f6;
+
+  --fonte-titulo: 'Sora', sans-serif;
+  --fonte-texto: 'Inter', sans-serif;
+  --fonte-mono: 'JetBrains Mono', monospace;
+
+  --raio: 12px;
+  --raio-campo: 10px;
+  --altura-botao: 44px;
+}

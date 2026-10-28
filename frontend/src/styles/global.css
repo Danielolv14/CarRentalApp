@@ -1,0 +1,61 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  background: var(--cor-fundo);
+  color: var(--cor-grafite);
+  font-family: var(--fonte-texto);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+}
+
+code {
+  font-family: var(--fonte-mono);
+}
+
+.provisoria {
+  max-width: 560px;
+  margin: 15vh auto 0;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca-icone {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--cor-destaque);
+  display: grid;
+  place-items: center;
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+}
+
+.marca-nome {
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  font-size: 21px;
+}
+
+.provisoria p {
+  color: var(--cor-texto-suave);
+}
