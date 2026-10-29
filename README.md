@@ -1,5 +1,3 @@
----
-
 # 🚗 Rota · Sistema de Aluguel de Carros 👨‍💻
 
 > [!NOTE]
