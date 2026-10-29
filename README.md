@@ -228,9 +228,9 @@ Copie `backend/.env.example` para `backend/.env` e preencha:
 
 | Variável | Descrição | Exemplo |
 |---|---|---|
-| `DB_URL` | JDBC do Supabase (Session pooler) | `jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:5432/postgres?sslmode=require` |
+| `DB_URL` | JDBC do Supabase (Session pooler) | `jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:5432/postgres?sslmode=require` |
 | `DB_USERNAME` | Usuário do banco | `postgres.<project-ref>` |
-| `DB_PASSWORD` | Senha do banco | `********` |
+| `DB_PASSWORD` | Senha do banco (só aqui, nunca na URL) | `********` |
 | `JPA_DDL_AUTO` | Estratégia do Hibernate | `update` |
 | `CORS_ALLOWED_ORIGINS` | Origem do front-end | `http://localhost:5173` |
 | `JWT_SECRET` | Segredo que assina o token (mínimo de 32 caracteres) | gere com `openssl rand -base64 48` |
@@ -265,9 +265,12 @@ cd backend
 ---
 
 ### 💾 Banco de Dados (Supabase)
-1. Crie um projeto no Supabase.
-2. Em **Project Settings › Database › Connection string**, copie a conexão **JDBC** do **Session pooler**. Ela funciona em redes IPv4.
-3. Preencha `backend/.env`. Com `JPA_DDL_AUTO=update`, o Hibernate cria as tabelas na primeira execução.
+1. Crie um projeto no Supabase (região **South America (São Paulo)**). Em **Security**, desligue a **Data API** e ligue o **RLS automático**: o sistema acessa o banco só pela API Spring (JDBC), então as tabelas não precisam ficar expostas na API REST do Supabase.
+2. Em **Connect › Direct › Session pooler**, veja os parâmetros da conexão (o Session pooler funciona em redes IPv4; a conexão direta só em IPv6):
+   - host: `aws-N-sa-east-1.pooler.supabase.com` (o `N` depende do projeto), porta `5432`, banco `postgres`;
+   - usuário: `postgres.<project-ref>`.
+3. Preencha `backend/.env`: `DB_URL=jdbc:postgresql://<host>:5432/postgres?sslmode=require`, `DB_USERNAME` e `DB_PASSWORD`. Se perder a senha, gere outra em **Database › Settings › Reset database password**.
+4. Na primeira execução, com `JPA_DDL_AUTO=update`, o Hibernate cria as 11 tabelas e a carga inicial cadastra os 6 automóveis da frota.
 
 ---
 
