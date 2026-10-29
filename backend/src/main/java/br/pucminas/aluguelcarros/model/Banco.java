@@ -18,6 +18,18 @@ public class Banco extends Agente {
         super(login, senha, nome, cnpj, razaoSocial);
     }
 
+    /** O banco só enxerga os pedidos em que o cliente pediu crédito a ele. */
+    @Override
+    public boolean podeAcompanhar(Pedido pedido) {
+        return pedido.isCreditoSolicitado() && this.equals(pedido.getBancoCredito());
+    }
+
+    /** O parecer positivo do banco vem junto com o contrato de crédito ({@link #concederCredito}). */
+    @Override
+    public boolean podeAvaliar(Pedido pedido) {
+        return podeAcompanhar(pedido);
+    }
+
     public ContratoCredito concederCredito(Pedido pedido, BigDecimal valor, int parcelas, BigDecimal taxaMensal) {
         if (!pedido.isCreditoSolicitado() || !this.equals(pedido.getBancoCredito())) {
             throw new RegraNegocioException("O crédito deste pedido não foi solicitado a este banco.");

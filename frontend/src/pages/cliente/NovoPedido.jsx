@@ -10,6 +10,7 @@ import Placa from '../../components/Placa.jsx'
 import Toast from '../../components/Toast.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import useSessaoExpirada from '../../hooks/useSessaoExpirada.js'
+import * as automovelService from '../../services/automovelService.js'
 import * as pedidoService from '../../services/pedidoService.js'
 import { formatarMoeda, lerMoeda, mascaraMoeda, moedaParaCampo } from '../../utils/formatos.js'
 import { coresDoCarro, diariasEntre, formatarData, hojeIso, nomeDoCarro } from '../../utils/pedidos.js'
@@ -49,7 +50,7 @@ export default function NovoPedido() {
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
-    Promise.all([pedidoService.listarAutomoveis(token), pedidoService.listarBancos(token)])
+    Promise.all([automovelService.listarAutomoveis(token), pedidoService.listarBancos(token)])
       .then(([listaAutomoveis, listaBancos]) => {
         setAutomoveis(listaAutomoveis)
         setBancos(listaBancos)

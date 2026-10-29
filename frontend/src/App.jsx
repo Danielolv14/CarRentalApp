@@ -11,6 +11,11 @@ import NovoPedido from './pages/cliente/NovoPedido.jsx'
 import MeusPedidos from './pages/cliente/MeusPedidos.jsx'
 import DetalhePedido from './pages/cliente/DetalhePedido.jsx'
 import PainelAgente from './pages/agente/PainelAgente.jsx'
+import PedidosAgente from './pages/agente/PedidosAgente.jsx'
+import AvaliarPedido from './pages/agente/AvaliarPedido.jsx'
+import ExecutarContrato from './pages/agente/ExecutarContrato.jsx'
+import Contratos from './pages/agente/Contratos.jsx'
+import Automoveis from './pages/agente/Automoveis.jsx'
 
 export default function App() {
   const { usuario } = useAuth()
@@ -68,6 +73,46 @@ export default function App() {
         element={
           <RotaProtegida perfil="AGENTE">
             <PainelAgente />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/agente/pedidos"
+        element={
+          <RotaProtegida perfil="AGENTE">
+            <PedidosAgente />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/agente/pedidos/:id"
+        element={
+          <RotaProtegida perfil="AGENTE">
+            <AvaliarPedido />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/agente/pedidos/:id/contrato"
+        element={
+          <RotaProtegida perfil="AGENTE">
+            <ExecutarContrato />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/agente/contratos"
+        element={
+          <RotaProtegida perfil="AGENTE">
+            <Contratos />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/agente/automoveis"
+        element={
+          <RotaProtegida perfil="AGENTE" tipoAgente="EMPRESA">
+            <Automoveis />
           </RotaProtegida>
         }
       />

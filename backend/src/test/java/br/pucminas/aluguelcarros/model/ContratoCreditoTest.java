@@ -12,7 +12,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /** Parcela pela tabela Price. Valores conferidos na calculadora: 1.729,00 em 3x a 1,9% a.m. = 598,37. */
 class ContratoCreditoTest {
 
-    private final Pedido pedido = new Pedido(null, null, LocalDate.of(2026, 11, 10), LocalDate.of(2026, 11, 17));
+    private final Automovel renegade = new Automovel("01245068972", 2022, "Jeep", "Renegade", "QNE8A62", new BigDecimal("247.00"));
+    private final Pedido pedido = new Pedido(null, renegade, LocalDate.of(2026, 11, 10), LocalDate.of(2026, 11, 17));
     private final Banco banco = new Banco("horizonte", "hash", "Banco Horizonte", "98765432000110", "Banco Horizonte S.A.");
 
     @Test

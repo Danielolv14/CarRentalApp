@@ -1,0 +1,170 @@
+/* Telas do agente (wireframes 10 a 14): painel, pedidos, avaliar pedido, executar contrato, contratos e automóveis. */
+
+/* ---------- tabelas do agente */
+.celula-cliente { display: flex; align-items: center; gap: 10px; }
+.avatar.pequeno { width: 28px; height: 28px; font-size: 10px; background: #efede7; color: var(--cor-texto-2); }
+.avatar.medio { width: 48px; height: 48px; font-size: 17px; }
+.tabela td.td-acao { width: 132px; text-align: right; }
+.btn.pequeno { height: 34px; padding: 0 14px; font-size: 13px; }
+.tabela tr.clicavel { cursor: pointer; }
+.tabela td.nao-quebra { white-space: nowrap; }
+
+.card-cabeca.com-legenda { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.card-cabeca .passo-sub { font-weight: 400; }
+.legenda { display: flex; gap: 16px; align-items: center; font-size: 13px; font-weight: 600; flex-wrap: wrap; }
+.legenda > span { display: flex; align-items: center; gap: 6px; }
+
+.tabela-barra.com-chips { align-items: center; padding-bottom: 12px; }
+.tabela-barra.com-chips .busca { margin-bottom: 0; }
+.pilha { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+.credito-sim { display: inline-flex; align-items: center; gap: 6px; color: var(--status-contratado); font-weight: 600; font-size: 13px; }
+.pill.sem-dono { background: transparent; padding: 0; color: var(--cor-texto-suave); }
+
+/* ---------- avaliar pedido */
+.cliente-topo { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+.grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
+.separador { height: 1px; background: #eeece6; margin: 18px 0; }
+
+.lista-rendimentos li { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.lista-rendimentos li + li { border-top: 1px dashed #eeece6; }
+.lista-rendimentos .empregador { flex: 1; min-width: 0; color: var(--cor-texto-2); }
+
+.comprometimento { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.comprometimento-topo { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--cor-texto-2); }
+.barra { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: #efede7; }
+.barra-ok { background: #16a34a; }
+.barra-alta { background: #dc2626; }
+
+.decisao { overflow: hidden; border-color: #d6e0fa; box-shadow: 0 12px 32px rgba(31, 79, 216, 0.08); }
+.decisao-topo { padding: 20px 24px; border-bottom: 1px solid #eeece6; background: #f7f9fe; }
+.decisao-corpo { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+.decisao-rodape { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 10px; }
+
+.veredito { display: flex; gap: 12px; }
+.veredito button {
+  flex: 1;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid #d3d0c7;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+}
+.veredito button.positivo.ativo { border: 2px solid #16a34a; background: #f0fdf4; color: var(--status-aprovado); }
+.veredito button.negativo.ativo { border: 2px solid #dc2626; background: #fef3f2; color: var(--status-reprovado); }
+
+.input.area { height: auto; padding: 12px 14px; align-items: flex-start; }
+.input textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 96px;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.decisao-corpo .separador { margin: 0; }
+.lista-rendimentos { margin: 8px 0 12px; }
+.form-modal { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; text-align: left; }
+
+.credito-topo { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.chip-inst {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e40af;
+  background: #dbeafe;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.calculo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--raio-campo);
+  background: var(--cor-fundo);
+  font-size: 14px;
+}
+.calculo .mono { font-weight: 700; }
+
+/* ---------- executar contrato */
+.donos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.dono-opcao {
+  border: 1px solid #d3d0c7;
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.dono-opcao.ativo { border: 2px solid var(--cor-primaria); background: #f7f9fe; }
+.dono-opcao:disabled { cursor: not-allowed; opacity: 0.55; }
+.dono-icone { width: 40px; height: 40px; border-radius: 10px; background: #efede7; display: grid; place-items: center; }
+.dono-opcao.ativo .dono-icone { background: #e8eefc; }
+.dono-titulo { font-weight: 600; font-size: 15px; margin-top: 4px; }
+.dono-sub { font-size: 13px; line-height: 18px; color: var(--cor-texto-suave); }
+.dono-marca {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #d3d0c7;
+  display: grid;
+  place-items: center;
+}
+.dono-opcao.ativo .dono-marca { background: var(--cor-primaria); border-color: var(--cor-primaria); }
+.confirmar { display: flex; flex-direction: column; gap: 14px; }
+.borda-topo { border-top: 1px solid #eeece6; }
+
+/* ---------- automóveis: gaveta lateral de cadastro e edição */
+.gaveta-fundo { position: fixed; inset: 0; z-index: 40; background: rgba(21, 24, 30, 0.35); }
+.gaveta {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 41;
+  width: min(480px, 100%);
+  height: 100%;
+  background: #fff;
+  box-shadow: -16px 0 40px rgba(21, 24, 30, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+.gaveta-topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #eeece6; }
+.gaveta-corpo { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+/* .campo tem flex: 1 (para dividir as linhas); numa coluna de altura fixa ele esticaria na vertical */
+.gaveta-corpo > .campo { flex: none; }
+.gaveta-previa { height: 150px; border-radius: 12px; display: grid; place-items: center; position: relative; flex: none; }
+.gaveta-placa { position: absolute; right: 14px; bottom: 12px; }
+.gaveta-rodape { display: flex; justify-content: flex-end; gap: 12px; padding: 18px 24px; border-top: 1px solid #eeece6; }
+.tabela tr.selecionada td { background: #f3f6fe; }
+
+/* ---------- telas menores */
+@media (max-width: 1100px) {
+  .donos { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .grade2 { grid-template-columns: 1fr; }
+  .veredito { flex-direction: column; }
+  .gaveta-corpo .linha2 { flex-direction: column; }
+}

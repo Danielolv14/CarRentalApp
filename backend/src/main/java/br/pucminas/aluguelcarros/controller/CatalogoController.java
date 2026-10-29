@@ -1,6 +1,5 @@
 package br.pucminas.aluguelcarros.controller;
 
-import br.pucminas.aluguelcarros.dto.AutomovelResponse;
 import br.pucminas.aluguelcarros.dto.BancoResponse;
 import br.pucminas.aluguelcarros.service.PedidoService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Listas usadas para montar o pedido: automóveis disponíveis e bancos para o crédito. Qualquer usuário logado. */
+/** Bancos que o cliente pode escolher para pedir crédito. Qualquer usuário logado. A frota fica no AutomovelController. */
 @RestController
 public class CatalogoController {
 
@@ -16,11 +15,6 @@ public class CatalogoController {
 
     public CatalogoController(PedidoService pedidos) {
         this.pedidos = pedidos;
-    }
-
-    @GetMapping("/automoveis")
-    public List<AutomovelResponse> automoveis() {
-        return pedidos.listarAutomoveis();
     }
 
     @GetMapping("/bancos")

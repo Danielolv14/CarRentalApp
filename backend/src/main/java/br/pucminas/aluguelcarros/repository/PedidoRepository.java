@@ -12,6 +12,11 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     /** "Meus pedidos" do cliente, do mais novo para o mais antigo. */
     List<Pedido> findByClienteIdOrderByDataCriacaoDesc(Long clienteId);
 
-    /** Fila de análise dos agentes, do mais antigo para o mais novo. */
+    /** Pedidos vistos pelos agentes, do mais antigo para o mais novo (a fila de análise). */
+    List<Pedido> findAllByOrderByDataCriacaoAsc();
+
     List<Pedido> findByStatusInOrderByDataCriacaoAsc(Collection<StatusPedido> status);
+
+    /** Automóvel que já aparece em algum pedido não pode ser removido da frota. */
+    boolean existsByAutomovelId(Long automovelId);
 }

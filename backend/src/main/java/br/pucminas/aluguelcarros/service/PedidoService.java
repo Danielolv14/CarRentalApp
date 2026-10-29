@@ -1,6 +1,5 @@
 package br.pucminas.aluguelcarros.service;
 
-import br.pucminas.aluguelcarros.dto.AutomovelResponse;
 import br.pucminas.aluguelcarros.dto.BancoResponse;
 import br.pucminas.aluguelcarros.dto.NovoPedidoRequest;
 import br.pucminas.aluguelcarros.dto.PedidoResponse;
@@ -10,8 +9,11 @@ import br.pucminas.aluguelcarros.model.Automovel;
 import br.pucminas.aluguelcarros.model.Banco;
 import br.pucminas.aluguelcarros.model.Cliente;
 import br.pucminas.aluguelcarros.model.Pedido;
+import br.pucminas.aluguelcarros.model.StatusPedido;
 import br.pucminas.aluguelcarros.repository.AutomovelRepository;
 import br.pucminas.aluguelcarros.repository.BancoRepository;
+import br.pucminas.aluguelcarros.repository.ContratoCreditoRepository;
+import br.pucminas.aluguelcarros.repository.ContratoRepository;
 import br.pucminas.aluguelcarros.repository.PedidoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +29,17 @@ public class PedidoService {
     private final AutomovelRepository automoveis;
     private final BancoRepository bancos;
     private final ClienteService clientes;
+    private final ContratoRepository contratos;
+    private final ContratoCreditoRepository creditos;
 
-    public PedidoService(PedidoRepository pedidos, AutomovelRepository automoveis, BancoRepository bancos, ClienteService clientes) {
+    public PedidoService(PedidoRepository pedidos, AutomovelRepository automoveis, BancoRepository bancos, ClienteService clientes,
+                         ContratoRepository contratos, ContratoCreditoRepository creditos) {
         this.pedidos = pedidos;
         this.automoveis = automoveis;
         this.bancos = bancos;
         this.clientes = clientes;
-    }
-
-    @Transactional(readOnly = true)
-    public List<AutomovelResponse> listarAutomoveis() {
-        return automoveis.findAllByOrderByMarcaAscModeloAsc().stream().map(AutomovelResponse::de).toList();
+        this.contratos = contratos;
+        this.creditos = creditos;
     }
 
     @Transactional(readOnly = true)
@@ -71,9 +73,13 @@ public class PedidoService {
         return pedidos.findByClienteIdOrderByDataCriacaoDesc(cliente.getId()).stream().map(PedidoResponse::de).toList();
     }
 
+    /** O detalhe traz também o crédito concedido pelo banco e o número do contrato, quando existirem. */
     @Transactional(readOnly = true)
     public PedidoResponse detalhar(String login, Long id) {
-        return PedidoResponse.de(doCliente(login, id));
+        Pedido pedido = doCliente(login, id);
+        return PedidoResponse.de(pedido,
+                pedido.isCreditoSolicitado() ? creditos.findByPedidoId(id).orElse(null) : null,
+                pedido.getStatus() == StatusPedido.CONTRATADO ? contratos.findByPedidoId(id).orElse(null) : null);
     }
 
     @Transactional

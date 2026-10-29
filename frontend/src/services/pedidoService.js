@@ -1,7 +1,5 @@
 import { api } from './api.js'
 
-export const listarAutomoveis = (token) => api('/automoveis', { token })
-
 export const listarBancos = (token) => api('/bancos', { token })
 
 export const criarPedido = (token, dados) => api('/pedidos', { metodo: 'POST', corpo: dados, token })

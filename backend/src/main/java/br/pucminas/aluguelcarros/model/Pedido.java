@@ -49,6 +49,10 @@ public class Pedido {
     @Column(nullable = false, length = 20)
     private StatusPedido status;
 
+    /** Diária do automóvel quando o pedido foi feito: mudar o preço da frota não altera pedidos já feitos. */
+    @Column(name = "valor_diaria", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorDiaria;
+
     @Column(name = "credito_solicitado", nullable = false)
     private boolean creditoSolicitado;
 
@@ -78,6 +82,7 @@ public class Pedido {
         validarPeriodo(dataRetirada, dataDevolucao);
         this.cliente = cliente;
         this.automovel = automovel;
+        this.valorDiaria = automovel.getValorDiaria();
         this.dataRetirada = dataRetirada;
         this.dataDevolucao = dataDevolucao;
         this.dataCriacao = LocalDateTime.now();
@@ -89,17 +94,19 @@ public class Pedido {
     }
 
     public BigDecimal calcularValorEstimado() {
-        return automovel.getValorDiaria().multiply(BigDecimal.valueOf(calcularDiarias()));
+        return valorDiaria.multiply(BigDecimal.valueOf(calcularDiarias()));
     }
 
     public boolean podeSerAlterado() {
         return status == StatusPedido.ENVIADO || status == StatusPedido.EM_ANALISE;
     }
 
+    /** Troca o automóvel e as datas. O pedido passa a usar a diária atual do automóvel. */
     public void alterar(Automovel automovel, LocalDate retirada, LocalDate devolucao) {
         exigirAlteravel();
         validarPeriodo(retirada, devolucao);
         this.automovel = automovel;
+        this.valorDiaria = automovel.getValorDiaria();
         this.dataRetirada = retirada;
         this.dataDevolucao = devolucao;
     }
@@ -172,6 +179,10 @@ public class Pedido {
 
     public StatusPedido getStatus() {
         return status;
+    }
+
+    public BigDecimal getValorDiaria() {
+        return valorDiaria;
     }
 
     public boolean isCreditoSolicitado() {

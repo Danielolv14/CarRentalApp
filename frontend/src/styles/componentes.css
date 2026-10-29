@@ -964,15 +964,6 @@
   background: var(--cor-destaque);
 }
 
-.nav-item.em-breve {
-  color: #6b7080;
-  cursor: not-allowed;
-}
-
-.nav-item.em-breve:hover {
-  background: none;
-}
-
 .sidebar-pe {
   margin-top: auto;
 }

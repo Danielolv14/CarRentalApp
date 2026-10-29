@@ -133,7 +133,7 @@ export default function MeusPedidos() {
                           <div className="forte">
                             {nomeDoCarro(p.automovel)} {p.automovel.ano}
                           </div>
-                          <div className="passo-sub">Diária {formatarMoeda(p.automovel.valorDiaria)}</div>
+                          <div className="passo-sub">Diária {formatarMoeda(p.valorDiaria)}</div>
                         </div>
                       </div>
                     </td>

@@ -52,8 +52,8 @@ class MapeamentoJpaTest {
 
         Pedido pedido = new Pedido(mariana, polo, LocalDate.of(2026, 11, 5), LocalDate.of(2026, 11, 12));
         pedido.solicitarCredito(banco, new BigDecimal("1323.00"));
-        pedido.iniciarAnalise();
-        locadora.avaliarPedido(pedido, ResultadoParecer.POSITIVO, "Renda compatível.");
+        banco.iniciarAnalise(pedido);
+        banco.avaliarPedido(pedido, ResultadoParecer.POSITIVO, "Renda compatível.");
         pedidos.save(pedido);
 
         creditos.save(banco.concederCredito(pedido, new BigDecimal("1323.00"), 3, new BigDecimal("1.90")));

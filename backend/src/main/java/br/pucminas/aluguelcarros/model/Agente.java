@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
+
 /** Instituição (empresa ou banco) que avalia pedidos e executa contratos. */
 @Entity
 @Table(name = "agentes")
@@ -25,8 +27,27 @@ public abstract class Agente extends Usuario {
         this.razaoSocial = razaoSocial;
     }
 
+    /** Se o agente enxerga o pedido: fila, detalhe, contrato e lista de contratos. */
+    public abstract boolean podeAcompanhar(Pedido pedido);
+
+    /** Se o parecer do pedido cabe a este agente. Pedido com crédito é avaliado pelo banco escolhido pelo cliente. */
+    public abstract boolean podeAvaliar(Pedido pedido);
+
+    /** Abre o pedido para análise: de ENVIADO ele passa para EM_ANALISE. */
+    public void iniciarAnalise(Pedido pedido) {
+        exigirAvaliador(pedido);
+        pedido.iniciarAnalise();
+    }
+
+    /** O agente responsável pela análise também pode trocar o automóvel e as datas (US08). */
+    public void modificarPedido(Pedido pedido, Automovel automovel, LocalDate retirada, LocalDate devolucao) {
+        exigirAvaliador(pedido);
+        pedido.alterar(automovel, retirada, devolucao);
+    }
+
     /** Dá o parecer financeiro: positivo aprova o pedido, negativo reprova. */
     public Parecer avaliarPedido(Pedido pedido, ResultadoParecer resultado, String justificativa) {
+        exigirAvaliador(pedido);
         if (justificativa == null || justificativa.isBlank()) {
             throw new RegraNegocioException("A justificativa do parecer é obrigatória.");
         }
@@ -55,6 +76,14 @@ public abstract class Agente extends Usuario {
         pedido.marcarComoContratado();
         pedido.getAutomovel().setProprietario(proprietario);
         return new Contrato(pedido, this, numero, tipoProprietario);
+    }
+
+    private void exigirAvaliador(Pedido pedido) {
+        if (!podeAvaliar(pedido)) {
+            throw new RegraNegocioException(pedido.isCreditoSolicitado()
+                    ? "O pedido pediu crédito ao " + pedido.getBancoCredito().getRazaoSocial() + ": o parecer é do banco."
+                    : "Só uma empresa avalia pedidos sem crédito bancário.");
+        }
     }
 
     @Override

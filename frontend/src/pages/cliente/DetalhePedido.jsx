@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import Botao from '../../components/Botao.jsx'
 import CarroSvg from '../../components/CarroSvg.jsx'
+import DonoPill from '../../components/DonoPill.jsx'
 import Icone from '../../components/Icone.jsx'
 import LayoutApp from '../../components/LayoutApp.jsx'
 import LinhaDoTempo from '../../components/LinhaDoTempo.jsx'
@@ -13,7 +14,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import useSessaoExpirada from '../../hooks/useSessaoExpirada.js'
 import * as pedidoService from '../../services/pedidoService.js'
 import { formatarMoeda } from '../../utils/formatos.js'
-import { coresDoCarro, formatarData, formatarDataHora, nomeDoCarro } from '../../utils/pedidos.js'
+import { coresDoCarro, formatarData, formatarDataHora, formatarTaxa, nomeDoCarro } from '../../utils/pedidos.js'
 
 /** Detalhe do pedido: linha do tempo do status, automóvel, período, crédito e parecer (UC05 e UC07). */
 export default function DetalhePedido() {
@@ -122,7 +123,7 @@ export default function DetalhePedido() {
                 <Placa numero={a.placa} />
                 <dl className="linhas-info">
                   <div><dt>Matrícula (RENAVAM)</dt><dd className="mono">{a.matricula}</dd></div>
-                  <div><dt>Diária</dt><dd className="mono">{formatarMoeda(a.valorDiaria)}</dd></div>
+                  <div><dt>Diária</dt><dd className="mono">{formatarMoeda(pedido.valorDiaria)}</dd></div>
                 </dl>
               </div>
             </div>
@@ -134,7 +135,7 @@ export default function DetalhePedido() {
               <dl className="linhas-info">
                 <div><dt>Retirada</dt><dd className="mono">{formatarData(pedido.dataRetirada)}</dd></div>
                 <div><dt>Devolução</dt><dd className="mono">{formatarData(pedido.dataDevolucao)}</dd></div>
-                <div><dt>Diárias</dt><dd className="mono">{pedido.diarias} × {formatarMoeda(a.valorDiaria)}</dd></div>
+                <div><dt>Diárias</dt><dd className="mono">{pedido.diarias} × {formatarMoeda(pedido.valorDiaria)}</dd></div>
               </dl>
               <div className="total-pedido">
                 <span>Valor estimado</span>
@@ -150,9 +151,17 @@ export default function DetalhePedido() {
             <div className="card-corpo">
               {pedido.credito ? (
                 <dl className="linhas-info">
-                  <div><dt>Solicitado</dt><dd>Sim</dd></div>
                   <div><dt>Banco</dt><dd>{pedido.credito.banco}</dd></div>
-                  <div><dt>Valor</dt><dd className="mono">{formatarMoeda(pedido.credito.valor)}</dd></div>
+                  <div><dt>Valor pedido</dt><dd className="mono">{formatarMoeda(pedido.credito.valor)}</dd></div>
+                  {pedido.credito.concedido ? (
+                    <>
+                      <div><dt>Concedido</dt><dd className="mono">{formatarMoeda(pedido.credito.concedido.valor)}</dd></div>
+                      <div><dt>Parcelas</dt><dd className="mono">{pedido.credito.concedido.parcelas}x de {formatarMoeda(pedido.credito.concedido.valorParcela)}</dd></div>
+                      <div><dt>Taxa</dt><dd className="mono">{formatarTaxa(pedido.credito.concedido.taxaMensal)} ao mês</dd></div>
+                    </>
+                  ) : (
+                    <div><dt>Situação</dt><dd>{pedido.status === 'REPROVADO' ? 'Não concedido' : 'Em análise pelo banco'}</dd></div>
+                  )}
                 </dl>
               ) : (
                 <p className="suave">Sem crédito bancário neste pedido.</p>
@@ -183,6 +192,19 @@ export default function DetalhePedido() {
               )}
             </div>
           </section>
+
+          {pedido.contrato && (
+            <section className="card">
+              <h2 className="card-cabeca">Contrato</h2>
+              <div className="card-corpo">
+                <dl className="linhas-info">
+                  <div><dt>Nº do contrato</dt><dd className="mono">{pedido.contrato.numero}</dd></div>
+                  <div><dt>Executado em</dt><dd className="mono">{formatarData(pedido.contrato.dataExecucao)}</dd></div>
+                  <div><dt>Proprietário do automóvel</dt><dd><DonoPill tipo={pedido.contrato.tipoProprietario} /></dd></div>
+                </dl>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 

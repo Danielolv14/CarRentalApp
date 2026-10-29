@@ -1,5 +1,5 @@
 import Icone from './Icone.jsx'
-import { formatarDataHora } from '../utils/pedidos.js'
+import { formatarData, formatarDataHora } from '../utils/pedidos.js'
 
 /** Monta as 4 etapas do pedido a partir do status (Enviado → Em análise → Parecer → Contrato). */
 function etapas(pedido) {
@@ -31,7 +31,10 @@ function etapas(pedido) {
     },
     {
       titulo: 'Contrato',
-      sub: status === 'CONTRATADO' ? 'Contrato executado' : status === 'APROVADO' ? 'Aguardando execução' : 'Execução pelo agente',
+      sub:
+        status === 'CONTRATADO'
+          ? pedido.contrato ? `${pedido.contrato.numero} · ${formatarData(pedido.contrato.dataExecucao)}` : 'Contrato executado'
+          : status === 'APROVADO' ? 'Aguardando execução' : 'Execução pelo agente',
       estado: status === 'CONTRATADO' ? 'feito' : status === 'APROVADO' ? 'atual' : '',
     },
   ]

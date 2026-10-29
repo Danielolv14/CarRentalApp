@@ -14,9 +14,10 @@ const MENU = {
   ],
   AGENTE: [
     { para: '/agente', icone: 'dashboard', rotulo: 'Painel' },
-    { icone: 'clipcheck', rotulo: 'Pedidos para avaliar' },
-    { icone: 'file', rotulo: 'Contratos' },
-    { icone: 'car', rotulo: 'Automóveis', so: 'EMPRESA' },
+    // fica marcado também na avaliação (/agente/pedidos/12) e na execução do contrato (/agente/pedidos/12/contrato)
+    { para: '/agente/pedidos', icone: 'clipcheck', rotulo: 'Pedidos para avaliar', ativo: (caminho) => caminho.startsWith('/agente/pedidos') },
+    { para: '/agente/contratos', icone: 'file', rotulo: 'Contratos' },
+    { para: '/agente/automoveis', icone: 'car', rotulo: 'Automóveis', so: 'EMPRESA' },
   ],
 }
 
@@ -54,24 +55,17 @@ export default function LayoutApp({ children }) {
         )}
         <nav className="nav" aria-label="Menu principal">
           <div className="nav-rotulo">{agente ? 'AGENTE' : 'MENU'}</div>
-          {itens.map((item) =>
-            item.para ? (
-              <NavLink
-                key={item.rotulo}
-                to={item.para}
-                end
-                className={({ isActive }) => `nav-item ${(item.ativo ? item.ativo(pathname) : isActive) ? 'ativo' : ''}`}
-              >
-                <Icone nome={item.icone} tamanho={18} />
-                <span>{item.rotulo}</span>
-              </NavLink>
-            ) : (
-              <span key={item.rotulo} className="nav-item em-breve" aria-disabled="true" title="Disponível nas próximas etapas">
-                <Icone nome={item.icone} tamanho={18} />
-                <span>{item.rotulo}</span>
-              </span>
-            ),
-          )}
+          {itens.map((item) => (
+            <NavLink
+              key={item.rotulo}
+              to={item.para}
+              end
+              className={({ isActive }) => `nav-item ${(item.ativo ? item.ativo(pathname) : isActive) ? 'ativo' : ''}`}
+            >
+              <Icone nome={item.icone} tamanho={18} />
+              <span>{item.rotulo}</span>
+            </NavLink>
+          ))}
         </nav>
         <div className="sidebar-pe">
           <div className="usuario-cartao">

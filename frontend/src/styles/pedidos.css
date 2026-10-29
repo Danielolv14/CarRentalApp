@@ -254,7 +254,8 @@
 .resumo-acoes { padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 4px; }
 
 /* ---------- tabela de pedidos */
-.tabela { overflow: hidden; }
+/* relative: o texto .sr-only (absoluto) dos cabeçalhos fica preso à tabela e não alarga a página no celular */
+.tabela { overflow: hidden; position: relative; }
 
 .tabela-barra {
   display: flex;

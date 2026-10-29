@@ -68,3 +68,37 @@ export function diariasEntre(retirada, devolucao) {
   const dias = (new Date(devolucao) - new Date(retirada)) / 86_400_000
   return dias > 0 ? Math.round(dias) : 0
 }
+
+// ---------- lado do agente
+
+/** Status em que o pedido ainda espera o parecer. */
+export const PENDENTES = ['ENVIADO', 'EM_ANALISE']
+
+/** Em nome de quem o automóvel fica registrado no contrato. */
+export const PROPRIETARIOS = {
+  CLIENTE: { rotulo: 'Cliente', icone: 'user' },
+  EMPRESA: { rotulo: 'Empresa', icone: 'building' },
+  BANCO: { rotulo: 'Banco', icone: 'landmark' },
+}
+
+/** "2026-10-28T14:32:10" → "há 3 horas", "há 2 dias" */
+export function tempoDesde(iso) {
+  const minutos = Math.max(0, Math.floor((Date.now() - new Date(iso)) / 60_000))
+  if (minutos < 60) return minutos < 2 ? 'agora há pouco' : `há ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `há ${horas} ${horas === 1 ? 'hora' : 'horas'}`
+  const dias = Math.floor(horas / 24)
+  return `há ${dias} ${dias === 1 ? 'dia' : 'dias'}`
+}
+
+/** Parcela fixa pela tabela Price, a mesma conta do back-end: PMT = PV · i / (1 − (1 + i)^−n). */
+export function calcularParcela(valor, taxaMensal, parcelas) {
+  if (!(valor > 0) || !(parcelas >= 1)) return 0
+  const i = taxaMensal / 100
+  if (!(i > 0)) return valor / parcelas
+  const fator = (1 + i) ** parcelas
+  return (valor * i * fator) / (fator - 1)
+}
+
+/** 1.9 → "1,90%" */
+export const formatarTaxa = (taxa) => `${Number(taxa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%`
