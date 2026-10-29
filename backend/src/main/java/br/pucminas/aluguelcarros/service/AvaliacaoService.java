@@ -24,7 +24,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -97,9 +96,7 @@ public class AvaliacaoService {
         Pedido pedido = acompanhado(agente, id);
         Automovel automovel = automoveis.findById(dados.automovelId())
                 .orElseThrow(() -> new NaoEncontradoException("Automóvel não encontrado."));
-        if (!dados.dataRetirada().equals(pedido.getDataRetirada()) && dados.dataRetirada().isBefore(LocalDate.now())) {
-            throw new RegraNegocioException("A data de retirada não pode estar no passado.");
-        }
+        PedidoService.exigirRetiradaValida(dados.dataRetirada(), pedido.getDataRetirada());
         agente.modificarPedido(pedido, automovel, dados.dataRetirada(), dados.dataDevolucao());
         return resposta(agente, pedido);
     }

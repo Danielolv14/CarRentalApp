@@ -20,6 +20,8 @@
   gap: 24px;
 }
 
+.topo-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .trilha {
   display: flex;
   align-items: center;
@@ -478,6 +480,8 @@
 
   .busca,
   .passo-topo .busca { width: 100%; margin-left: 0; }
+
+  .topo-acoes > * { flex: 1; }
 
   .tabela { overflow-x: auto; }
   .linha-tempo { flex-direction: column; gap: 12px; }

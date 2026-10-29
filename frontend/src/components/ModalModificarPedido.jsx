@@ -7,7 +7,8 @@ import Icone from './Icone.jsx'
 import Modal from './Modal.jsx'
 
 /**
- * UC06 Modificar pedido pelo agente: troca o automóvel e as datas. A lista de automóveis vem da página.
+ * UC06 Modificar pedido, pelo cliente (detalhe do pedido) ou pelo agente que avalia: troca o automóvel e as datas.
+ * A lista de automóveis vem da página.
  * aoSalvar recebe { automovelId, dataRetirada, dataDevolucao }.
  */
 export default function ModalModificarPedido({ pedido, automoveis, aoSalvar, aoFechar, salvando, erroApi }) {
@@ -33,6 +34,14 @@ export default function ModalModificarPedido({ pedido, automoveis, aoSalvar, aoF
     if (Object.keys(e).length === 0) aoSalvar({ automovelId: Number(automovelId), dataRetirada: retirada, dataDevolucao: devolucao })
   }
 
+  /** Mexer numa data apaga o erro dela, que só volta a ser conferido ao salvar. */
+  function mudarData(campo, definir) {
+    return (e) => {
+      definir(e.target.value)
+      setErros((atuais) => ({ ...atuais, [campo]: undefined }))
+    }
+  }
+
   return (
     <Modal
       titulo={`Modificar o pedido ${pedido.numero}`}
@@ -49,12 +58,15 @@ export default function ModalModificarPedido({ pedido, automoveis, aoSalvar, aoF
         </>
       }
     >
-      <p>O valor é recalculado com a diária atual do automóvel. O crédito pedido pelo cliente continua o mesmo.</p>
+      <p>
+        O valor é recalculado com a diária atual do automóvel.
+        {pedido.credito && ` O crédito pedido ao ${pedido.credito.banco} continua o mesmo.`}
+      </p>
       <div className="form-modal">
         <Campo rotulo="Automóvel" icone="car" opcoes={opcoes} value={automovelId} onChange={(e) => setAutomovelId(e.target.value)} />
         <div className="linha2">
-          <Campo rotulo="Retirada" tipo="date" mono value={retirada} onChange={(e) => setRetirada(e.target.value)} erro={erros.dataRetirada} />
-          <Campo rotulo="Devolução" tipo="date" mono min={retirada} value={devolucao} onChange={(e) => setDevolucao(e.target.value)} erro={erros.dataDevolucao} />
+          <Campo rotulo="Retirada" tipo="date" mono value={retirada} onChange={mudarData('dataRetirada', setRetirada)} erro={erros.dataRetirada} />
+          <Campo rotulo="Devolução" tipo="date" mono min={retirada} value={devolucao} onChange={mudarData('dataDevolucao', setDevolucao)} erro={erros.dataDevolucao} />
         </div>
         <div className="calculo">
           <span>

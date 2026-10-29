@@ -31,7 +31,7 @@
 | Modelagem (casos de uso, histórias, classes e pacotes) | ✅ v1, revisada na v2 (pacotes), na v3 (classes) e na v5 (classes e pacotes) |
 | Autenticação (login de clientes e agentes) | ✅ |
 | CRUD de cliente | ✅ |
-| Protótipo (criar pedido e ver o status) | ✅ cliente e agente: fila, parecer, crédito do banco, contrato e frota |
+| Protótipo (criar pedido e ver o status) | ✅ cliente (criar, modificar, consultar e cancelar) e agente: fila, parecer, crédito do banco, contrato e frota |
 | Revisão dos diagramas | contínua |
 
 ---
@@ -157,6 +157,7 @@ O sistema tem os **dois subsistemas** do enunciado, ligados por uma API REST:
 | `POST` | `/pedidos` | cliente | Cria o pedido (automóvel, retirada, devolução e crédito opcional). Começa como `ENVIADO` |
 | `GET` | `/pedidos` | cliente | Meus pedidos, do mais novo para o mais antigo |
 | `GET` | `/pedidos/{id}` | cliente | Detalhe com status, crédito e pareceres. O pedido de outro cliente responde 404 |
+| `PUT` | `/pedidos/{id}` | cliente | Modifica o automóvel e as datas, só se estiver `ENVIADO` ou `EM_ANALISE` (senão 422). O valor passa a usar a diária atual e o crédito pedido não muda |
 | `POST` | `/pedidos/{id}/cancelar` | cliente | Cancela, só se estiver `ENVIADO` ou `EM_ANALISE` (senão 422) |
 | `GET` | `/agente/pedidos` | agente | Pedidos que o agente acompanha, do mais antigo para o mais novo, com o cadastro do cliente. Filtro opcional: `?status=ENVIADO&status=EM_ANALISE` |
 | `GET` | `/agente/pedidos/{id}` | agente | Detalhe para a análise: pedido, cliente, renda total, crédito e contrato. Pedido que o agente não acompanha responde 404 |
@@ -375,6 +376,8 @@ Telas já implementadas (login, cadastro, meu perfil, o protótipo de pedido do 
 | <img src="docs/img/telas/avaliar-pedido.png" alt="Avaliar pedido" width="420px"> | <img src="docs/img/telas/executar-contrato.png" alt="Executar contrato" width="420px"> |
 | **Contratos** | **Automóveis (cadastro na gaveta)** |
 | <img src="docs/img/telas/contratos.png" alt="Contratos" width="420px"> | <img src="docs/img/telas/automoveis.png" alt="Automóveis" width="420px"> |
+| **Modificar pedido (cliente)** | |
+| <img src="docs/img/telas/modificar-pedido.png" alt="Cliente modificando o pedido" width="420px"> | |
 
 ---
 
@@ -385,7 +388,7 @@ Telas já implementadas (login, cadastro, meu perfil, o protótipo de pedido do 
 cd backend
 ./mvnw test
 ```
-São 62 testes:
+São 64 testes:
 - **API do agente** (`AvaliacaoControllerTest`, 7 testes):
   - a empresa vê todos os pedidos e o banco só os de crédito para ele (outro banco não vê nada);
   - filtro da fila por status;
@@ -396,11 +399,13 @@ São 62 testes:
   - cliente barrado nas rotas do agente.
 - **API de contratos** (`ContratoControllerTest`, 3 testes): só pedido aprovado vira contrato, número `CTR-AAAA-NNNN`, proprietário registrado no automóvel, crédito associado e lista de contratos por agente.
 - **API da frota** (`AutomovelControllerTest`, 4 testes): cadastrar, editar e remover; placa, matrícula e ano inválidos ou repetidos; automóvel com pedido não sai; a nova diária não muda o pedido antigo; só a empresa mexe na frota.
-- **API de pedidos** (`PedidoControllerTest`, 7 testes):
+- **API de pedidos** (`PedidoControllerTest`, 9 testes):
   - listas de automóveis e bancos;
   - pedido com e sem crédito;
   - datas inválidas, automóvel ou banco inexistente e campos obrigatórios;
   - um cliente não vê o pedido de outro;
+  - modificar o automóvel e as datas recalcula o valor e mantém o crédito pedido;
+  - modificar confere as datas, o automóvel, o dono do pedido e o status (pedido cancelado não muda);
   - cancelar e não cancelar de novo;
   - agente barrado nas rotas do cliente.
 - **API do CRUD de cliente** (`ClienteControllerTest`, 7 testes):

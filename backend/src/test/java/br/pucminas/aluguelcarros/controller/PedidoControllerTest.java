@@ -24,10 +24,11 @@ import static br.pucminas.aluguelcarros.controller.DocumentosDeTeste.rendimentos
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Testes de API do protótipo de pedido: criar, listar, detalhar e cancelar (UC04, UC05, UC07, UC08). */
+/** Testes de API do protótipo de pedido: criar, listar, detalhar, modificar e cancelar (UC04 a UC08). */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -41,12 +42,15 @@ class PedidoControllerTest {
     @Autowired private AutomovelRepository automoveis;
 
     private Automovel polo;
+    private Automovel corolla;
 
     @BeforeEach
-    void cadastrarAutomovel() {
+    void cadastrarAutomoveis() {
         int n = PLACAS.incrementAndGet();
         polo = automoveis.save(new Automovel("%011d".formatted(90_000_000_000L + n), 2024, "Volkswagen", "Polo",
                 "PLO%dA%02d".formatted(n % 10, n % 100), new BigDecimal("189.00")));
+        corolla = automoveis.save(new Automovel("%011d".formatted(91_000_000_000L + n), 2025, "Toyota", "Corolla",
+                "CRL%dB%02d".formatted(n % 10, n % 100), new BigDecimal("250.00")));
     }
 
     // ---------------------------------------------------------------- listas para montar o pedido
@@ -139,6 +143,57 @@ class PedidoControllerTest {
                 .andExpect(jsonPath("$.mensagem").value("Pedido não encontrado."));
     }
 
+    // ---------------------------------------------------------------- modificar
+
+    @Test
+    void clienteModificaOAutomovelEAsDatasERecalculaOValor() throws Exception {
+        String token = cadastrarCliente("muda.pedido");
+        long bancoId = cadastrarBanco("banco.mantido", "Banco Mantido S.A.");
+        String credito = "{\"bancoId\":%d,\"valor\":1323.00}".formatted(bancoId);
+        int id = JsonPath.read(corpo(criar(token, novoPedido(polo.getId(), RETIRADA, DEVOLUCAO, credito))), "$.id");
+
+        modificar(token, id, alteracao(corolla.getId(), RETIRADA, RETIRADA.plusDays(3)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ENVIADO"))
+                .andExpect(jsonPath("$.automovel.modelo").value("Corolla"))
+                .andExpect(jsonPath("$.valorDiaria").value(250.00))
+                .andExpect(jsonPath("$.diarias").value(3))
+                .andExpect(jsonPath("$.valorEstimado").value(750.00))
+                .andExpect(jsonPath("$.credito.banco").value("Banco Mantido S.A."))
+                .andExpect(jsonPath("$.credito.valor").value(1323.00));
+        comToken(get("/pedidos/" + id), token)
+                .andExpect(jsonPath("$.automovel.modelo").value("Corolla"))
+                .andExpect(jsonPath("$.dataDevolucao").value(RETIRADA.plusDays(3).toString()));
+    }
+
+    @Test
+    void modificarValidaDatasAutomovelDonoEStatus() throws Exception {
+        String token = cadastrarCliente("muda.errado");
+        String outro = cadastrarCliente("muda.alheio");
+        int id = JsonPath.read(corpo(criar(token, novoPedido(polo.getId(), RETIRADA, DEVOLUCAO, null))), "$.id");
+
+        modificar(token, id, alteracao(polo.getId(), LocalDate.now().minusDays(1), DEVOLUCAO))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensagem").value("A data de retirada não pode estar no passado."));
+        modificar(token, id, alteracao(polo.getId(), DEVOLUCAO, RETIRADA))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensagem").value("A data de devolução precisa ser posterior à de retirada."));
+        modificar(token, id, alteracao(999_999L, RETIRADA, DEVOLUCAO))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagem").value("Automóvel não encontrado."));
+        modificar(token, id, "{\"automovelId\":%d}".formatted(polo.getId()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.campos.dataRetirada").value("Informe a data de retirada."));
+        modificar(outro, id, alteracao(corolla.getId(), RETIRADA, DEVOLUCAO))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagem").value("Pedido não encontrado."));
+
+        comToken(post("/pedidos/%d/cancelar".formatted(id)), token).andExpect(status().isOk());
+        modificar(token, id, alteracao(corolla.getId(), RETIRADA, DEVOLUCAO))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensagem").value("Pedidos com status CANCELADO não podem ser alterados."));
+    }
+
     // ---------------------------------------------------------------- cancelar
 
     @Test
@@ -163,6 +218,7 @@ class PedidoControllerTest {
 
         comToken(get("/pedidos"), agente).andExpect(status().isForbidden());
         criar(agente, novoPedido(polo.getId(), RETIRADA, DEVOLUCAO, null)).andExpect(status().isForbidden());
+        modificar(agente, 1, alteracao(polo.getId(), RETIRADA, DEVOLUCAO)).andExpect(status().isForbidden());
         comToken(get("/automoveis"), agente).andExpect(status().isOk());
     }
 
@@ -172,6 +228,16 @@ class PedidoControllerTest {
         return """
                 {"automovelId":%d,"dataRetirada":"%s","dataDevolucao":"%s","credito":%s}
                 """.formatted(automovelId, retirada, devolucao, credito);
+    }
+
+    private static String alteracao(Long automovelId, LocalDate retirada, LocalDate devolucao) {
+        return """
+                {"automovelId":%d,"dataRetirada":"%s","dataDevolucao":"%s"}
+                """.formatted(automovelId, retirada, devolucao);
+    }
+
+    private ResultActions modificar(String token, int id, String corpo) throws Exception {
+        return comToken(put("/pedidos/" + id).contentType(MediaType.APPLICATION_JSON).content(corpo), token);
     }
 
     private ResultActions criar(String token, String corpo) throws Exception {

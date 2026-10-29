@@ -75,7 +75,7 @@
 
 .decisao-corpo .separador { margin: 0; }
 .lista-rendimentos { margin: 8px 0 12px; }
-.form-modal { display: flex; flex-direction: column; gap: 16px; margin-top: 4px; text-align: left; }
+.form-modal { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; text-align: left; }
 
 .credito-topo { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .chip-inst {

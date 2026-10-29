@@ -7,16 +7,18 @@ import Icone from '../../components/Icone.jsx'
 import LayoutApp from '../../components/LayoutApp.jsx'
 import LinhaDoTempo from '../../components/LinhaDoTempo.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalModificarPedido from '../../components/ModalModificarPedido.jsx'
 import Placa from '../../components/Placa.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import Toast from '../../components/Toast.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import useSessaoExpirada from '../../hooks/useSessaoExpirada.js'
+import * as automovelService from '../../services/automovelService.js'
 import * as pedidoService from '../../services/pedidoService.js'
 import { formatarMoeda } from '../../utils/formatos.js'
 import { coresDoCarro, formatarData, formatarDataHora, formatarTaxa, nomeDoCarro } from '../../utils/pedidos.js'
 
-/** Detalhe do pedido: linha do tempo do status, automóvel, período, crédito e parecer (UC05 e UC07). */
+/** Detalhe do pedido: linha do tempo do status, automóvel, período, crédito e parecer (UC05, UC06 e UC07). */
 export default function DetalhePedido() {
   const { id } = useParams()
   const { token } = useAuth()
@@ -27,6 +29,10 @@ export default function DetalhePedido() {
   const [erro, setErro] = useState('')
   const [confirmar, setConfirmar] = useState(false)
   const [cancelando, setCancelando] = useState(false)
+  const [modificando, setModificando] = useState(false)
+  const [automoveis, setAutomoveis] = useState([])
+  const [salvandoAlteracao, setSalvandoAlteracao] = useState(false)
+  const [erroAlteracao, setErroAlteracao] = useState('')
   const [aviso, setAviso] = useState(local.state?.aviso ? { tipo: 'ok', titulo: local.state.aviso, texto: 'Agora é só acompanhar a análise.' } : null)
 
   useEffect(() => {
@@ -35,6 +41,31 @@ export default function DetalhePedido() {
       .then(setPedido)
       .catch((e) => (e.status === 401 ? sessaoExpirada() : setErro(e.message)))
   }, [token, id, sessaoExpirada])
+
+  async function abrirModificacao() {
+    setErroAlteracao('')
+    setModificando(true)
+    try {
+      setAutomoveis(await automovelService.listarAutomoveis(token))
+    } catch (e) {
+      if (e.status === 401) sessaoExpirada()
+    }
+  }
+
+  async function salvarModificacao(dados) {
+    setSalvandoAlteracao(true)
+    setErroAlteracao('')
+    try {
+      setPedido(await pedidoService.modificarPedido(token, id, dados))
+      setModificando(false)
+      setAviso({ tipo: 'ok', titulo: 'Pedido modificado', texto: 'O valor estimado foi recalculado.' })
+    } catch (e) {
+      if (e.status === 401) return sessaoExpirada()
+      setErroAlteracao(e.message)
+    } finally {
+      setSalvandoAlteracao(false)
+    }
+  }
 
   async function cancelar() {
     setCancelando(true)
@@ -95,13 +126,18 @@ export default function DetalhePedido() {
           </div>
           <p className="sub">
             Enviado em {formatarDataHora(pedido.dataCriacao)}.
-            {pedido.podeSerAlterado && ' Você ainda pode cancelar enquanto ele estiver em análise.'}
+            {pedido.podeSerAlterado && ' Você ainda pode modificar ou cancelar enquanto ele estiver em análise.'}
           </p>
         </div>
         {pedido.podeSerAlterado && (
-          <Botao variante="danger-outline" icone="x" onClick={() => setConfirmar(true)}>
-            Cancelar pedido
-          </Botao>
+          <div className="topo-acoes">
+            <Botao variante="secondary" icone="pencil" onClick={abrirModificacao}>
+              Modificar pedido
+            </Botao>
+            <Botao variante="danger-outline" icone="x" onClick={() => setConfirmar(true)}>
+              Cancelar pedido
+            </Botao>
+          </div>
         )}
       </div>
 
@@ -228,6 +264,16 @@ export default function DetalhePedido() {
         </Modal>
       )}
 
+      {modificando && (
+        <ModalModificarPedido
+          pedido={pedido}
+          automoveis={automoveis}
+          aoSalvar={salvarModificacao}
+          aoFechar={() => setModificando(false)}
+          salvando={salvandoAlteracao}
+          erroApi={erroAlteracao}
+        />
+      )}
       {aviso && <Toast {...aviso} aoFechar={() => setAviso(null)} />}
     </LayoutApp>
   )

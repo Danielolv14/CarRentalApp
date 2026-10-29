@@ -1,5 +1,6 @@
 package br.pucminas.aluguelcarros.controller;
 
+import br.pucminas.aluguelcarros.dto.AlteracaoPedidoRequest;
 import br.pucminas.aluguelcarros.dto.NovoPedidoRequest;
 import br.pucminas.aluguelcarros.dto.PedidoResponse;
 import br.pucminas.aluguelcarros.service.PedidoService;
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -42,6 +44,12 @@ public class PedidoController {
     @GetMapping("/{id}")
     public PedidoResponse detalhar(@AuthenticationPrincipal Jwt token, @PathVariable Long id) {
         return pedidos.detalhar(token.getSubject(), id);
+    }
+
+    @PutMapping("/{id}")
+    public PedidoResponse modificar(@AuthenticationPrincipal Jwt token, @PathVariable Long id,
+                                    @Valid @RequestBody AlteracaoPedidoRequest dados) {
+        return pedidos.modificar(token.getSubject(), id, dados);
     }
 
     @PostMapping("/{id}/cancelar")

@@ -1,5 +1,6 @@
 package br.pucminas.aluguelcarros.service;
 
+import br.pucminas.aluguelcarros.dto.AlteracaoPedidoRequest;
 import br.pucminas.aluguelcarros.dto.BancoResponse;
 import br.pucminas.aluguelcarros.dto.NovoPedidoRequest;
 import br.pucminas.aluguelcarros.dto.PedidoResponse;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/** UC04 Introduzir pedido, UC05 Consultar pedidos, UC07 Cancelar pedido e UC08 Solicitar crédito (lado do cliente). */
+/** UC04 Introduzir pedido, UC05 Consultar pedidos, UC06 Modificar pedido, UC07 Cancelar pedido e UC08 Solicitar crédito (lado do cliente). */
 @Service
 public class PedidoService {
 
@@ -52,9 +53,7 @@ public class PedidoService {
         Cliente cliente = clientes.logado(login);
         Automovel automovel = automoveis.findById(dados.automovelId())
                 .orElseThrow(() -> new NaoEncontradoException("Automóvel não encontrado."));
-        if (dados.dataRetirada().isBefore(LocalDate.now())) {
-            throw new RegraNegocioException("A data de retirada não pode estar no passado.");
-        }
+        exigirRetiradaValida(dados.dataRetirada(), null);
 
         Pedido pedido = new Pedido(cliente, automovel, dados.dataRetirada(), dados.dataDevolucao());
         if (dados.credito() != null) {
@@ -82,11 +81,29 @@ public class PedidoService {
                 pedido.getStatus() == StatusPedido.CONTRATADO ? contratos.findByPedidoId(id).orElse(null) : null);
     }
 
+    /** Troca o automóvel e as datas enquanto o pedido está Enviado ou Em análise. O crédito pedido continua o mesmo. */
+    @Transactional
+    public PedidoResponse modificar(String login, Long id, AlteracaoPedidoRequest dados) {
+        Pedido pedido = doCliente(login, id);
+        Automovel automovel = automoveis.findById(dados.automovelId())
+                .orElseThrow(() -> new NaoEncontradoException("Automóvel não encontrado."));
+        exigirRetiradaValida(dados.dataRetirada(), pedido.getDataRetirada());
+        pedido.alterar(automovel, dados.dataRetirada(), dados.dataDevolucao());
+        return PedidoResponse.de(pedido);
+    }
+
     @Transactional
     public PedidoResponse cancelar(String login, Long id) {
         Pedido pedido = doCliente(login, id);
         pedido.cancelar();
         return PedidoResponse.de(pedido);
+    }
+
+    /** A retirada não pode estar no passado. Ao modificar, a data que o pedido já tinha continua valendo. */
+    static void exigirRetiradaValida(LocalDate retirada, LocalDate anterior) {
+        if (!retirada.equals(anterior) && retirada.isBefore(LocalDate.now())) {
+            throw new RegraNegocioException("A data de retirada não pode estar no passado.");
+        }
     }
 
     /** O cliente só enxerga os próprios pedidos: o pedido de outro cliente responde como inexistente. */
